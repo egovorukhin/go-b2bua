@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 // Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
 //
@@ -30,17 +29,17 @@ type fakeAccounting struct {
 }
 
 func NewFakeAccounting() *fakeAccounting {
-    return &fakeAccounting{
-    }
+	return &fakeAccounting{}
 }
+
 /*
 class FakeAccounting(object):
-    def __init__(self, *args):
+    def __init__(s, *args):
         pass
 
-    def conn(self, *args):
+    def conn(s, *args):
         pass
 
-    def disc(self, *args):
+    def disc(s, *args):
         pass
 */

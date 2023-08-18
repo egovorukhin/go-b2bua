@@ -1,4 +1,4 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
+// Package sippy_header Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 // Copyright (c) 2006-2019 Sippy Software, Inc. All rights reserved.
 // Copyright (c) 2019 Andrii Pylypenko. All rights reserved.
 //
@@ -27,27 +27,27 @@
 package sippy_header
 
 import (
-    "github.com/sippy/go-b2bua/sippy/fmt"
+	"github.com/sippy/go-b2bua/sippy/fmt"
 )
 
 type RTID struct {
-    CallId      string
-    FromTag     string
-    RSeq        int
-    CSeq        int
-    Method      string
+	CallId  string
+	FromTag string
+	RSeq    int
+	CSeq    int
+	Method  string
 }
 
-func NewRTID(call_id, from_tag string, rseq, cseq int, method string) *RTID {
-    return &RTID{
-        CallId      : call_id,
-        FromTag     : from_tag,
-        RSeq        : rseq,
-        CSeq        : cseq,
-        Method      : method,
-    }
+func NewRTID(callId, fromTag string, rseq, cseq int, method string) *RTID {
+	return &RTID{
+		CallId:  callId,
+		FromTag: fromTag,
+		RSeq:    rseq,
+		CSeq:    cseq,
+		Method:  method,
+	}
 }
 
-func (self *RTID) String() string {
-    return sippy_fmt.Sprintf("callid: '%s', cseq: '%d', method: '%s', from_tag: '%s', rseq: '%d'", self.CallId, self.CSeq, self.Method, self.FromTag, self.RSeq)
+func (r *RTID) String() string {
+	return sippy_fmt.Sprintf("call_id: '%s', cseq: '%d', method: '%s', from_tag: '%s', rseq: '%d'", r.CallId, r.CSeq, r.Method, r.FromTag, r.RSeq)
 }

@@ -26,14 +26,14 @@
 package sippy_fmt
 
 import (
-    "fmt"
-    "sync"
+	"fmt"
+	"sync"
 )
 
-var global_lock sync.Mutex
+var globalLock sync.Mutex
 
 func Sprintf(format string, args ...interface{}) string {
-    global_lock.Lock()
-    defer global_lock.Unlock()
-    return fmt.Sprintf(format, args...)
+	globalLock.Lock()
+	defer globalLock.Unlock()
+	return fmt.Sprintf(format, args...)
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
+// Package sippy_header Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
 //
 // All rights reserved.
 //
@@ -25,39 +25,39 @@
 package sippy_header
 
 type normalName struct {
-    name    string
+	name string
 }
 
 func newNormalName(name string) normalName {
-    return normalName{
-        name : name,
-    }
+	return normalName{
+		name: name,
+	}
 }
 
-func (self normalName) Name() string {
-    return self.name
+func (n normalName) Name() string {
+	return n.name
 }
 
-func (self normalName) CompactName() string {
-    return self.name
+func (n normalName) CompactName() string {
+	return n.name
 }
 
 type compactName struct {
-    name            string
-    compact_name    string
+	name        string
+	compactName string
 }
 
-func newCompactName(name, compact_name string) compactName {
-    return compactName{
-        name         : name,
-        compact_name : compact_name,
-    }
+func newCompactName(name, cmtName string) compactName {
+	return compactName{
+		name:        name,
+		compactName: cmtName,
+	}
 }
 
-func (self compactName) Name() string {
-    return self.name
+func (n compactName) Name() string {
+	return n.name
 }
 
-func (self compactName) CompactName() string {
-    return self.compact_name
+func (n compactName) CompactName() string {
+	return n.compactName
 }

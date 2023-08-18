@@ -27,99 +27,99 @@
 package main
 
 import (
-    "errors"
-    "io"
-    "net/http"
-    "os"
-    "time"
+	"errors"
+	"io"
+	"net/http"
+	"os"
+	"time"
 
-    "github.com/sippy/go-b2bua/sippy/stir_shaken"
+	"github.com/sippy/go-b2bua/sippy/stir_shaken"
 )
 
 type StirShaken struct {
-    verifier    sippy_sshaken.Verifier
-    config      *myconfig
-    cert_buf    []byte
-    pkey_buf    []byte
+	verifier sippy_sshaken.Verifier
+	config   *myconfig
+	cert_buf []byte
+	pkey_buf []byte
 }
 
 func NewStirShaken(config *myconfig) (*StirShaken, error) {
-    chain_buf, err := read_file(config.Crt_roots_file)
-    if err != nil {
-        return nil, err
-    }
-    cert_buf, err := read_file(config.Crt_file)
-    if err != nil {
-        return nil, err
-    }
-    pkey_buf, err := read_file(config.Pkey_file)
-    if err != nil {
-        return nil, err
-    }
-    ret := &StirShaken{
-        config      : config,
-        cert_buf    : cert_buf,
-        pkey_buf    : pkey_buf,
-    }
-    ret.verifier, err = sippy_sshaken.NewVerifier(chain_buf)
-    if err != nil {
-        return nil, err
-    }
-    return ret, nil
+	chain_buf, err := read_file(config.Crt_roots_file)
+	if err != nil {
+		return nil, err
+	}
+	cert_buf, err := read_file(config.Crt_file)
+	if err != nil {
+		return nil, err
+	}
+	pkey_buf, err := read_file(config.Pkey_file)
+	if err != nil {
+		return nil, err
+	}
+	ret := &StirShaken{
+		config:   config,
+		cert_buf: cert_buf,
+		pkey_buf: pkey_buf,
+	}
+	ret.verifier, err = sippy_sshaken.NewVerifier(chain_buf)
+	if err != nil {
+		return nil, err
+	}
+	return ret, nil
 }
 
-func (self *StirShaken) Authenticate(date_ts time.Time, cli, cld string) (string, error) {
-    return sippy_sshaken.Authenticate(date_ts, self.config.Attest, self.config.Origid, self.cert_buf, self.pkey_buf, self.config.X5u, cli, cld)
+func (s *StirShaken) Authenticate(date_ts time.Time, cli, cld string) (string, error) {
+	return sippy_sshaken.Authenticate(date_ts, s.config.Attest, s.config.Origid, s.cert_buf, s.pkey_buf, s.config.X5u, cli, cld)
 }
 
-func (self *StirShaken) Verify(identity, orig_tn, dest_tn string, date_ts time.Time) error {
-    passport, err := sippy_sshaken.ParseIdentity(identity)
-    if err != nil {
-        return err
-    }
-    cert_buf, err := self.GetCert(passport.Header.X5u)
-    if err != nil {
-        return err
-    }
-    return self.verifier.Verify(passport, cert_buf, orig_tn, dest_tn, date_ts)
+func (s *StirShaken) Verify(identity, orig_tn, dest_tn string, date_ts time.Time) error {
+	passport, err := sippy_sshaken.ParseIdentity(identity)
+	if err != nil {
+		return err
+	}
+	cert_buf, err := s.GetCert(passport.Header.X5u)
+	if err != nil {
+		return err
+	}
+	return s.verifier.Verify(passport, cert_buf, orig_tn, dest_tn, date_ts)
 }
 
-func (self *StirShaken) GetCert(url string) ([]byte, error) {
-    client := &http.Client{
-        Timeout : time.Second,
-    }
-    resp, err := client.Get(url)
-    if err != nil {
-        return nil, err
-    }
-    defer resp.Body.Close()
-    cert, err := read_all(resp.Body)
-    if err != nil {
-        return nil, err
-    }
-    if len(cert) == 0 {
-        return nil, errors.New("Empty certificate retrieved")
-    }
-    return cert, nil
+func (s *StirShaken) GetCert(url string) ([]byte, error) {
+	client := &http.Client{
+		Timeout: time.Second,
+	}
+	resp, err := client.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	cert, err := read_all(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if len(cert) == 0 {
+		return nil, errors.New("Empty certificate retrieved")
+	}
+	return cert, nil
 }
 
 func read_all(fd io.Reader) ([]byte, error) {
-    buf := make([]byte, 4096)
-    n, err := fd.Read(buf)
-    if err != nil && err != io.EOF {
-        return nil, err
-    }
-    if n == 0 {
-        return nil, errors.New("Empty certificate retrieved")
-    }
-    return buf[:n], nil
+	buf := make([]byte, 4096)
+	n, err := fd.Read(buf)
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+	if n == 0 {
+		return nil, errors.New("Empty certificate retrieved")
+	}
+	return buf[:n], nil
 }
 
 func read_file(fname string) ([]byte, error) {
-    fd, err := os.Open(fname)
-    if err != nil {
-        return nil, err
-    }
-    defer fd.Close()
-    return read_all(fd)
+	fd, err := os.Open(fname)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+	return read_all(fd)
 }

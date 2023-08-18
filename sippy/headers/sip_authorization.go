@@ -1,297 +1,270 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-// Copyright (c) 2006-2015 Sippy Software, Inc. All rights reserved.
-// Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package sippy_header
 
 import (
-    "encoding/hex"
-    "errors"
-    "strings"
+	"encoding/hex"
+	"errors"
+	"strings"
 
-    "github.com/sippy/go-b2bua/sippy/net"
-    "github.com/sippy/go-b2bua/sippy/security"
-    "github.com/sippy/go-b2bua/sippy/time"
-    "github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/sippy/go-b2bua/sippy/security"
+	"github.com/sippy/go-b2bua/sippy/time"
+	"github.com/sippy/go-b2bua/sippy/utils"
 )
 
 type SipAuthorizationBody struct {
-    username    string
-    realm       string
-    nonce       string
-    uri         string
-    response    string
-    qop         string
-    nc          string
-    cnonce      string
-    algorithm   string
-    opaque      string
-    otherparams string
+	username    string
+	realm       string
+	nonce       string
+	uri         string
+	response    string
+	qop         string
+	nc          string
+	cnonce      string
+	algorithm   string
+	opaque      string
+	otherparams string
 }
 
 type SipAuthorization struct {
-    normalName
-    body        *SipAuthorizationBody
-    string_body string
+	normalName
+	body       *SipAuthorizationBody
+	stringBody string
 }
 
-var _sip_authorization_name normalName = newNormalName("Authorization")
+var sipAuthorizationName normalName = newNormalName("Authorization")
 
 func NewSipAuthorizationWithBody(body *SipAuthorizationBody) *SipAuthorization {
-    return &SipAuthorization{
-        normalName  : _sip_authorization_name,
-        body        : body,
-    }
+	return &SipAuthorization{
+		normalName: sipAuthorizationName,
+		body:       body,
+	}
 }
 
 func NewSipAuthorization(realm, nonce, uri, username, algorithm string) *SipAuthorization {
-    return &SipAuthorization{
-        normalName : _sip_authorization_name,
-        body    : &SipAuthorizationBody{
-            realm       : realm,
-            nonce       : nonce,
-            uri         : uri,
-            username    : username,
-            algorithm   : algorithm,
-        },
-    }
+	return &SipAuthorization{
+		normalName: sipAuthorizationName,
+		body: &SipAuthorizationBody{
+			realm:     realm,
+			nonce:     nonce,
+			uri:       uri,
+			username:  username,
+			algorithm: algorithm,
+		},
+	}
 }
 
 func CreateSipAuthorization(body string) []SipHeader {
-    self := createSipAuthorizationObj(body)
-    return []SipHeader{ self }
+	s := createSipAuthorizationObj(body)
+	return []SipHeader{s}
 }
 
 func createSipAuthorizationObj(body string) *SipAuthorization {
-    return &SipAuthorization{
-        normalName  : _sip_authorization_name,
-        string_body : body,
-    }
+	return &SipAuthorization{
+		normalName: sipAuthorizationName,
+		stringBody: body,
+	}
 }
 
 func newSipAuthorizationBody(realm, nonce, uri, username, algorithm string) *SipAuthorizationBody {
-    return &SipAuthorizationBody{
-        realm       : realm,
-        nonce       : nonce,
-        uri         : uri,
-        username    : username,
-        algorithm   : algorithm,
-    }
+	return &SipAuthorizationBody{
+		realm:     realm,
+		nonce:     nonce,
+		uri:       uri,
+		username:  username,
+		algorithm: algorithm,
+	}
 }
 
 func parseSipAuthorizationBody(body string) (*SipAuthorizationBody, error) {
-    self := &SipAuthorizationBody{
-    }
-    arr := sippy_utils.FieldsN(body, 2)
-    if len(arr) != 2 {
-        return nil, errors.New("Error parsing authorization (1)")
-    }
-    for _, param := range strings.Split(arr[1], ",") {
-        kv := strings.SplitN(strings.TrimSpace(param), "=", 2)
-        if len(kv) != 2 {
-            return nil, errors.New("Error parsing authorization (2)")
-        }
-        name, value := kv[0], kv[1]
-        switch strings.ToLower(name) {
-        case "username":
-            self.username = strings.Trim(value, "\"")
-        case "uri":
-            self.uri = strings.Trim(value, "\"")
-        case "realm":
-            self.realm = strings.Trim(value, "\"")
-        case "nonce":
-            self.nonce = strings.Trim(value, "\"")
-        case "response":
-            self.response = strings.Trim(value, "\"")
-        case "qop":
-            self.qop = strings.Trim(value, "\"")
-        case "cnonce":
-            self.cnonce = strings.Trim(value, "\"")
-        case "nc":
-            self.nc = strings.Trim(value, "\"")
-        case "algorithm":
-            self.algorithm = strings.Trim(value, "\"")
-        case "opaque":
-            self.opaque = strings.Trim(value, "\"")
-        default:
-            self.otherparams += "," + param
-        }
-    }
-    return self, nil
+	s := &SipAuthorizationBody{}
+	arr := sippy_utils.FieldsN(body, 2)
+	if len(arr) != 2 {
+		return nil, errors.New("Error parsing authorization (1)")
+	}
+	for _, param := range strings.Split(arr[1], ",") {
+		kv := strings.SplitN(strings.TrimSpace(param), "=", 2)
+		if len(kv) != 2 {
+			return nil, errors.New("Error parsing authorization (2)")
+		}
+		name, value := kv[0], kv[1]
+		switch strings.ToLower(name) {
+		case "username":
+			s.username = strings.Trim(value, "\"")
+		case "uri":
+			s.uri = strings.Trim(value, "\"")
+		case "realm":
+			s.realm = strings.Trim(value, "\"")
+		case "nonce":
+			s.nonce = strings.Trim(value, "\"")
+		case "response":
+			s.response = strings.Trim(value, "\"")
+		case "qop":
+			s.qop = strings.Trim(value, "\"")
+		case "cnonce":
+			s.cnonce = strings.Trim(value, "\"")
+		case "nc":
+			s.nc = strings.Trim(value, "\"")
+		case "algorithm":
+			s.algorithm = strings.Trim(value, "\"")
+		case "opaque":
+			s.opaque = strings.Trim(value, "\"")
+		default:
+			s.otherparams += "," + param
+		}
+	}
+	return s, nil
 }
 
-func (self *SipAuthorizationBody) String() string {
-    rval := "Digest username=\"" + self.username + "\",realm=\"" + self.realm + "\",nonce=\"" + self.nonce +
-        "\",uri=\"" + self.uri + "\",response=\"" + self.response + "\""
-    if self.algorithm != "" {
-        rval += ",algorithm=\"" + self.algorithm + "\""
-    }
-    if self.qop != "" {
-        rval += ",nc=\"" + self.nc + "\",cnonce=\"" + self.cnonce + "\",qop=" + self.qop
-    }
-    if self.opaque != "" {
-        rval += ",opaque=\"" + self.opaque + "\""
-    }
-    return rval + self.otherparams
+func (b *SipAuthorizationBody) String() string {
+	rval := "Digest username=\"" + b.username + "\",realm=\"" + b.realm + "\",nonce=\"" + b.nonce +
+		"\",uri=\"" + b.uri + "\",response=\"" + b.response + "\""
+	if b.algorithm != "" {
+		rval += ",algorithm=\"" + b.algorithm + "\""
+	}
+	if b.qop != "" {
+		rval += ",nc=\"" + b.nc + "\",cnonce=\"" + b.cnonce + "\",qop=" + b.qop
+	}
+	if b.opaque != "" {
+		rval += ",opaque=\"" + b.opaque + "\""
+	}
+	return rval + b.otherparams
 }
 
-func (self *SipAuthorizationBody) GetCopy() *SipAuthorizationBody {
-    rval := *self
-    return &rval
+func (b *SipAuthorizationBody) GetCopy() *SipAuthorizationBody {
+	rval := *b
+	return &rval
 }
 
-func (self *SipAuthorizationBody) GetUsername() string {
-    return self.username
+func (b *SipAuthorizationBody) GetUsername() string {
+	return b.username
 }
 
-func (self *SipAuthorizationBody) Verify(passwd, method, entity_body string) bool {
-    alg := sippy_security.GetAlgorithm(self.algorithm)
-    if alg == nil {
-        return false
-    }
-    HA1 := DigestCalcHA1(alg, self.algorithm, self.username, self.realm, passwd, self.nonce, self.cnonce)
-    return self.VerifyHA1(HA1, method, entity_body)
+func (b *SipAuthorizationBody) Verify(passwd, method, entityBody string) bool {
+	alg := sippy_security.GetAlgorithm(b.algorithm)
+	if alg == nil {
+		return false
+	}
+	HA1 := DigestCalcHA1(alg, b.algorithm, b.username, b.realm, passwd, b.nonce, b.cnonce)
+	return b.VerifyHA1(HA1, method, entityBody)
 }
 
-func (self *SipAuthorizationBody) VerifyHA1(HA1, method, entity_body string) bool {
-    now, _ := sippy_time.NewMonoTime()
-    alg := sippy_security.GetAlgorithm(self.algorithm)
-    if alg == nil {
-        return false
-    }
-    if self.qop != "" && self.qop != "auth" {
-        return false
-    }
-    if ! sippy_security.HashOracle.ValidateChallenge(self.nonce, alg.Mask, now.Monot()) {
-        return false
-    }
-    response := DigestCalcResponse(alg, HA1, self.nonce, self.nc, self.cnonce, self.qop, method, self.uri, entity_body)
-    return response == self.response
+func (b *SipAuthorizationBody) VerifyHA1(HA1, method, entityBody string) bool {
+	now, _ := sippy_time.NewMonoTime()
+	alg := sippy_security.GetAlgorithm(b.algorithm)
+	if alg == nil {
+		return false
+	}
+	if b.qop != "" && b.qop != "auth" {
+		return false
+	}
+	if !sippy_security.HashOracle.ValidateChallenge(b.nonce, alg.Mask, now.Monot()) {
+		return false
+	}
+	response := DigestCalcResponse(alg, HA1, b.nonce, b.nc, b.cnonce, b.qop, method, b.uri, entityBody)
+	return response == b.response
 }
 
-func (self *SipAuthorization) String() string {
-    return self.Name() + ": " + self.StringBody()
+func (a *SipAuthorization) String() string {
+	return a.Name() + ": " + a.StringBody()
 }
 
-func (self *SipAuthorization) LocalStr(*sippy_net.HostPort, bool) string {
-    return self.String()
+func (a *SipAuthorization) LocalStr(*sippy_net.HostPort, bool) string {
+	return a.String()
 }
 
-func (self *SipAuthorization) StringBody() string {
-    if self.body != nil {
-        return self.body.String()
-    }
-    return self.string_body
+func (a *SipAuthorization) StringBody() string {
+	if a.body != nil {
+		return a.body.String()
+	}
+	return a.stringBody
 }
 
-func (self *SipAuthorization) GetCopy() *SipAuthorization {
-    if self == nil {
-        return nil
-    }
-    var rval SipAuthorization = *self
-    if self.body != nil {
-        rval.body = self.body.GetCopy()
-    }
-    return &rval
+func (a *SipAuthorization) GetCopy() *SipAuthorization {
+	if a == nil {
+		return nil
+	}
+	var rval SipAuthorization = *a
+	if a.body != nil {
+		rval.body = a.body.GetCopy()
+	}
+	return &rval
 }
 
-func (self *SipAuthorization) parse() error {
-    body, err := parseSipAuthorizationBody(self.string_body)
-    if err != nil {
-        return err
-    }
-    self.body = body
-    return nil
+func (a *SipAuthorization) parse() error {
+	body, err := parseSipAuthorizationBody(a.stringBody)
+	if err != nil {
+		return err
+	}
+	a.body = body
+	return nil
 }
 
-func (self *SipAuthorization) GetBody() (*SipAuthorizationBody, error) {
-    if self.body == nil {
-        if err := self.parse(); err != nil {
-            return nil, err
-        }
-    }
-    return self.body, nil
+func (a *SipAuthorization) GetBody() (*SipAuthorizationBody, error) {
+	if a.body == nil {
+		if err := a.parse(); err != nil {
+			return nil, err
+		}
+	}
+	return a.body, nil
 }
 
-func (self *SipAuthorization) GetUsername() (string, error) {
-    body, err := self.GetBody()
-    if err != nil {
-        return "", err
-    }
-    return body.GetUsername(), nil
+func (a *SipAuthorization) GetUsername() (string, error) {
+	body, err := a.GetBody()
+	if err != nil {
+		return "", err
+	}
+	return body.GetUsername(), nil
 }
 
-func (self *SipAuthorizationBody) GenResponse(password, method, entity_body string) {
-    alg := sippy_security.GetAlgorithm(self.algorithm)
-    if alg == nil {
-        return
-    }
-    HA1 := DigestCalcHA1(alg, self.algorithm, self.username, self.realm, password,
-          self.nonce, self.cnonce)
-    self.response = DigestCalcResponse(alg, HA1, self.nonce,
-          self.nc, self.cnonce, self.qop, method, self.uri, entity_body)
+func (b *SipAuthorizationBody) GenResponse(password, method, entityBody string) {
+	alg := sippy_security.GetAlgorithm(b.algorithm)
+	if alg == nil {
+		return
+	}
+	HA1 := DigestCalcHA1(alg, b.algorithm, b.username, b.realm, password,
+		b.nonce, b.cnonce)
+	b.response = DigestCalcResponse(alg, HA1, b.nonce,
+		b.nc, b.cnonce, b.qop, method, b.uri, entityBody)
 }
 
-func (self *SipAuthorization) GetCopyAsIface() SipHeader {
-    return self.GetCopy()
+func (a *SipAuthorization) GetCopyAsIface() SipHeader {
+	return a.GetCopy()
 }
 
 func DigestCalcHA1(alg *sippy_security.Algorithm, pszAlg, pszUserName, pszRealm, pszPassword, pszNonce, pszCNonce string) string {
-    s := pszUserName + ":" + pszRealm + ":" + pszPassword
-    hash := alg.NewHash()
-    hash.Write([]byte(s))
-    HA1 := hash.Sum(nil)
-    if strings.HasSuffix(pszAlg, "-sess") {
-        s2 := []byte(hex.EncodeToString(HA1))
-        s2 = append(s2, []byte(":" + pszNonce + ":" + pszCNonce)...)
-        hash = alg.NewHash()
-        hash.Write([]byte(s2))
-        HA1 = hash.Sum(nil)
-    }
-    return hex.EncodeToString(HA1)
+	s := pszUserName + ":" + pszRealm + ":" + pszPassword
+	hash := alg.NewHash()
+	hash.Write([]byte(s))
+	HA1 := hash.Sum(nil)
+	if strings.HasSuffix(pszAlg, "-sess") {
+		s2 := []byte(hex.EncodeToString(HA1))
+		s2 = append(s2, []byte(":"+pszNonce+":"+pszCNonce)...)
+		hash = alg.NewHash()
+		hash.Write([]byte(s2))
+		HA1 = hash.Sum(nil)
+	}
+	return hex.EncodeToString(HA1)
 }
 
 func DigestCalcResponse(alg *sippy_security.Algorithm, HA1, pszNonce, pszNonceCount, pszCNonce, pszQop, pszMethod, pszDigestUri, pszHEntity string) string {
-    s := pszMethod + ":" + pszDigestUri
-    if pszQop == "auth-int" {
-        hash := alg.NewHash()
-        hash.Write([]byte(pszHEntity))
-        sum := hash.Sum(nil)
-        s += ":" + hex.EncodeToString(sum[:])
-    }
-    hash := alg.NewHash()
-    hash.Write([]byte(s))
-    sum := hash.Sum(nil)
-    HA2 := hex.EncodeToString(sum[:])
-    s = HA1 + ":" + pszNonce + ":"
-    if pszNonceCount != "" && pszCNonce != "" { // pszQop:
-        s += pszNonceCount + ":" + pszCNonce + ":" + pszQop + ":"
-    }
-    s += HA2
-    hash = alg.NewHash()
-    hash.Write([]byte(s))
-    sum = hash.Sum(nil)
-    return hex.EncodeToString(sum[:])
+	s := pszMethod + ":" + pszDigestUri
+	if pszQop == "auth-int" {
+		hash := alg.NewHash()
+		hash.Write([]byte(pszHEntity))
+		sum := hash.Sum(nil)
+		s += ":" + hex.EncodeToString(sum[:])
+	}
+	hash := alg.NewHash()
+	hash.Write([]byte(s))
+	sum := hash.Sum(nil)
+	HA2 := hex.EncodeToString(sum[:])
+	s = HA1 + ":" + pszNonce + ":"
+	if pszNonceCount != "" && pszCNonce != "" { // pszQop:
+		s += pszNonceCount + ":" + pszCNonce + ":" + pszQop + ":"
+	}
+	s += HA2
+	hash = alg.NewHash()
+	hash.Write([]byte(s))
+	sum = hash.Sum(nil)
+	return hex.EncodeToString(sum[:])
 }

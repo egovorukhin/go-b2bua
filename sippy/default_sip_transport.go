@@ -28,21 +28,21 @@
 package sippy
 
 import (
-    "github.com/sippy/go-b2bua/sippy/conf"
-    "github.com/sippy/go-b2bua/sippy/net"
+	"github.com/sippy/go-b2bua/sippy/conf"
+	"github.com/sippy/go-b2bua/sippy/net"
 )
 
 type default_sip_transport_factory struct {
-    config  sippy_conf.Config
+	config sippy_conf.Config
 }
 
 func NewDefaultSipTransportFactory(config sippy_conf.Config) *default_sip_transport_factory {
-    return &default_sip_transport_factory{
-        config  : config,
-    }
+	return &default_sip_transport_factory{
+		config: config,
+	}
 }
 
-func (self *default_sip_transport_factory) NewSipTransport(laddress *sippy_net.HostPort, handler sippy_net.DataPacketReceiver) (sippy_net.Transport, error) {
-    sopts := NewUdpServerOpts(laddress, handler)
-    return NewUdpServer(self.config, sopts)
+func (s *default_sip_transport_factory) NewSipTransport(laddress *sippy_net.HostPort, handler sippy_net.DataPacketReceiver) (sippy_net.Transport, error) {
+	sopts := NewUdpServerOpts(laddress, handler)
+	return NewUdpServer(s.config, sopts)
 }

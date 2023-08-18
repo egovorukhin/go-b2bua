@@ -1,79 +1,53 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-// Copyright (c) 2006-2015 Sippy Software, Inc. All rights reserved.
-// Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package sippy_header
 
 import (
-    "strconv"
+	"strconv"
 )
 
 type SipNumericHF struct {
-    string_body     string
-    Number          int
-    parsed          bool
+	stringBody string
+	Number     int
+	parsed     bool
 }
 
 func newSipNumericHF(num int) SipNumericHF {
-    return SipNumericHF{
-        Number      : num,
-        parsed      : true,
-    }
+	return SipNumericHF{
+		Number: num,
+		parsed: true,
+	}
 }
 
 func createSipNumericHF(body string) SipNumericHF {
-    return SipNumericHF{
-        string_body     : body,
-        parsed          : false,
-    }
+	return SipNumericHF{
+		stringBody: body,
+		parsed:     false,
+	}
 }
 
-func (self *SipNumericHF) StringBody() string {
-    if self.parsed {
-        return strconv.Itoa(self.Number)
-    }
-    return self.string_body
+func (s *SipNumericHF) StringBody() string {
+	if s.parsed {
+		return strconv.Itoa(s.Number)
+	}
+	return s.stringBody
 }
 
-func (self *SipNumericHF) parse() error {
-    if ! self.parsed {
-        var err error
-        self.Number, err = strconv.Atoi(self.string_body)
-        if err != nil {
-            return err
-        }
-        self.parsed = true
-    }
-    return nil
+func (s *SipNumericHF) parse() error {
+	if !s.parsed {
+		var err error
+		s.Number, err = strconv.Atoi(s.stringBody)
+		if err != nil {
+			return err
+		}
+		s.parsed = true
+	}
+	return nil
 }
 
-func (self *SipNumericHF) GetBody() (*SipNumericHF, error) {
-    if ! self.parsed {
-        if err := self.parse(); err != nil {
-            return nil, err
-        }
-    }
-    return self, nil
+func (s *SipNumericHF) GetBody() (*SipNumericHF, error) {
+	if !s.parsed {
+		if err := s.parse(); err != nil {
+			return nil, err
+		}
+	}
+	return s, nil
 }

@@ -26,199 +26,198 @@
 package sippy_cli
 
 import (
-    "bufio"
-    "fmt"
-    "net"
-    "os"
-    "sync"
-    "syscall"
+	"bufio"
+	"fmt"
+	"net"
+	"os"
+	"sync"
+	"syscall"
 
-    "github.com/sippy/go-b2bua/sippy/log"
-    "github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/sippy/go-b2bua/sippy/log"
+	"github.com/sippy/go-b2bua/sippy/utils"
 )
 
 type CLIManagerIface interface {
-    Close()
-    Send(string)
-    RemoteAddr() net.Addr
+	Close()
+	Send(string)
+	RemoteAddr() net.Addr
 }
 
 type CLIConnectionManager struct {
-    tcp         bool
-    sock        net.Listener
-    command_cb  func(clim CLIManagerIface, cmd string)
-    accept_list map[string]bool
-    accept_list_lock sync.RWMutex
-    logger      sippy_log.ErrorLogger
+	tcp            bool
+	sock           net.Listener
+	commandCb      func(clim CLIManagerIface, cmd string)
+	acceptList     map[string]bool
+	acceptListLock sync.RWMutex
+	logger         sippy_log.ErrorLogger
 }
 
-func NewCLIConnectionManagerUnix(command_cb func(clim CLIManagerIface, cmd string), address string, uid, gid int, logger sippy_log.ErrorLogger) (*CLIConnectionManager, error) {
-    addr, err := net.ResolveUnixAddr("unix", address)
-    if err != nil {
-        return nil, err
-    }
-    conn, err := net.DialUnix("unix", nil, addr)
-    if err == nil {
-        conn.Close()
-        return nil, fmt.Errorf("Another process listens on %s", address)
-    }
-    os.Remove(address)
-    sock, err := net.ListenUnix("unix", addr)
-    if err != nil {
-        return nil, err
-    }
-    os.Chown(address, uid, gid)
-    os.Chmod(address, 0660)
-    return &CLIConnectionManager{
-        command_cb  : command_cb,
-        sock        : sock,
-        tcp         : false,
-        logger      : logger,
-    }, nil
+func NewCLIConnectionManagerUnix(commandCb func(clim CLIManagerIface, cmd string), address string, uid, gid int, logger sippy_log.ErrorLogger) (*CLIConnectionManager, error) {
+	addr, err := net.ResolveUnixAddr("unix", address)
+	if err != nil {
+		return nil, err
+	}
+	conn, err := net.DialUnix("unix", nil, addr)
+	if err == nil {
+		_ = conn.Close()
+		return nil, fmt.Errorf("Another process listens on %s", address)
+	}
+	_ = os.Remove(address)
+	sock, err := net.ListenUnix("unix", addr)
+	if err != nil {
+		return nil, err
+	}
+	_ = os.Chown(address, uid, gid)
+	_ = os.Chmod(address, 0660)
+	return &CLIConnectionManager{
+		commandCb: commandCb,
+		sock:      sock,
+		tcp:       false,
+		logger:    logger,
+	}, nil
 }
 
-func NewCLIConnectionManagerTcp(command_cb func(clim CLIManagerIface, cmd string), address string, logger sippy_log.ErrorLogger) (*CLIConnectionManager, error) {
-    addr, err := net.ResolveTCPAddr("tcp", address)
-    if err != nil {
-        return nil, err
-    }
-    sock, err := net.ListenTCP("tcp", addr)
-    if err != nil {
-        return nil, err
-    }
-    return &CLIConnectionManager{
-        command_cb  : command_cb,
-        sock        : sock,
-        tcp         : true,
-        logger      : logger,
-    }, nil
+func NewCLIConnectionManagerTcp(commandCb func(clim CLIManagerIface, cmd string), address string, logger sippy_log.ErrorLogger) (*CLIConnectionManager, error) {
+	addr, err := net.ResolveTCPAddr("tcp", address)
+	if err != nil {
+		return nil, err
+	}
+	sock, err := net.ListenTCP("tcp", addr)
+	if err != nil {
+		return nil, err
+	}
+	return &CLIConnectionManager{
+		commandCb: commandCb,
+		sock:      sock,
+		tcp:       true,
+		logger:    logger,
+	}, nil
 }
 
-func (self *CLIConnectionManager) Start() {
-    go self.run()
+func (c *CLIConnectionManager) Start() {
+	go c.run()
 }
 
-func (self *CLIConnectionManager) run() {
-    defer self.sock.Close()
-    for {
-        conn, err := self.sock.Accept()
-        if err != nil {
-            self.logger.Error(err.Error())
-            break
-        }
-        go self.handle_accept(conn)
-    }
+func (c *CLIConnectionManager) run() {
+	defer c.sock.Close()
+	for {
+		conn, err := c.sock.Accept()
+		if err != nil {
+			c.logger.Error(err.Error())
+			break
+		}
+		go c.handleAccept(conn)
+	}
 }
 
-func (self *CLIConnectionManager) handle_accept(conn net.Conn) {
-    if self.tcp {
-        raddr, _, err := net.SplitHostPort(conn.RemoteAddr().String())
-        if err != nil {
-            self.logger.Error("SplitHostPort failed. Possible bug: " + err.Error())
-            // Not reached
-            conn.Close()
-            return
-        }
-        self.accept_list_lock.RLock()
-        defer self.accept_list_lock.RUnlock()
-        if self.accept_list != nil {
-            if _, ok := self.accept_list[raddr]; ! ok {
-                conn.Close()
-                return
-            }
-        }
-    }
-    cm := NewCLIManager(conn, self.command_cb, self.logger)
-    go cm.run()
+func (c *CLIConnectionManager) handleAccept(conn net.Conn) {
+	if c.tcp {
+		raddr, _, err := net.SplitHostPort(conn.RemoteAddr().String())
+		if err != nil {
+			c.logger.Error("SplitHostPort failed. Possible bug: " + err.Error())
+			// Not reached
+			_ = conn.Close()
+			return
+		}
+		c.acceptListLock.RLock()
+		defer c.acceptListLock.RUnlock()
+		if c.acceptList != nil {
+			if _, ok := c.acceptList[raddr]; !ok {
+				_ = conn.Close()
+				return
+			}
+		}
+	}
+	cm := NewCLIManager(conn, c.commandCb, c.logger)
+	go cm.run()
 }
 
-func (self *CLIConnectionManager) Shutdown() {
-    self.sock.Close()
+func (c *CLIConnectionManager) Shutdown() {
+	c.sock.Close()
 }
 
-func (self *CLIConnectionManager) GetAcceptList() []string {
-    self.accept_list_lock.RLock()
-    defer self.accept_list_lock.RUnlock()
-    if self.accept_list != nil {
-        ret := make([]string, 0, len(self.accept_list))
-        for addr, _ := range self.accept_list {
-            ret = append(ret, addr)
-        }
-        return ret
-    }
-    return nil
+func (c *CLIConnectionManager) GetAcceptList() []string {
+	c.acceptListLock.RLock()
+	defer c.acceptListLock.RUnlock()
+	if c.acceptList != nil {
+		ret := make([]string, 0, len(c.acceptList))
+		for addr, _ := range c.acceptList {
+			ret = append(ret, addr)
+		}
+		return ret
+	}
+	return nil
 }
 
-func (self *CLIConnectionManager) SetAcceptList(acl []string) {
-    accept_list := make(map[string]bool)
-    for _, addr := range acl {
-        accept_list[addr] = true
-    }
-    self.accept_list_lock.Lock()
-    self.accept_list = accept_list
-    self.accept_list_lock.Unlock()
+func (c *CLIConnectionManager) SetAcceptList(acl []string) {
+	acceptList := make(map[string]bool)
+	for _, addr := range acl {
+		acceptList[addr] = true
+	}
+	c.acceptListLock.Lock()
+	c.acceptList = acceptList
+	c.acceptListLock.Unlock()
 }
 
-func (self *CLIConnectionManager) AcceptListAppend(ip string) {
-    self.accept_list_lock.Lock()
-    if self.accept_list == nil {
-        self.accept_list = make(map[string]bool)
-    }
-    self.accept_list[ip] = true
-    self.accept_list_lock.Unlock()
+func (c *CLIConnectionManager) AcceptListAppend(ip string) {
+	c.acceptListLock.Lock()
+	if c.acceptList == nil {
+		c.acceptList = make(map[string]bool)
+	}
+	c.acceptList[ip] = true
+	c.acceptListLock.Unlock()
 }
 
-func (self *CLIConnectionManager) AcceptListRemove(ip string) {
-    self.accept_list_lock.Lock()
-    if self.accept_list != nil {
-        delete(self.accept_list, ip)
-    }
-    self.accept_list_lock.Unlock()
+func (c *CLIConnectionManager) AcceptListRemove(ip string) {
+	c.acceptListLock.Lock()
+	if c.acceptList != nil {
+		delete(c.acceptList, ip)
+	}
+	c.acceptListLock.Unlock()
 
 }
 
 type CLIManager struct {
-    sock        net.Conn
-    command_cb  func(CLIManagerIface, string)
-    logger      sippy_log.ErrorLogger
+	sock      net.Conn
+	commandCb func(CLIManagerIface, string)
+	logger    sippy_log.ErrorLogger
 }
 
-func NewCLIManager(sock net.Conn, command_cb func(CLIManagerIface, string), logger sippy_log.ErrorLogger) *CLIManager {
-    return &CLIManager{
-        sock        : sock,
-        command_cb  : command_cb,
-        logger      : logger,
-    }
+func NewCLIManager(sock net.Conn, commandCb func(CLIManagerIface, string), logger sippy_log.ErrorLogger) *CLIManager {
+	return &CLIManager{
+		sock:      sock,
+		commandCb: commandCb,
+		logger:    logger,
+	}
 }
 
-func (self *CLIManager) run() {
-    defer self.sock.Close()
-    reader := bufio.NewReader(self.sock)
-    for {
-        line, _, err := reader.ReadLine()
-        if err != nil && err != syscall.EINTR {
-            return
-        } else {
-            sippy_utils.SafeCall(func() { self.command_cb(self, string(line)) }, nil, self.logger)
-        }
-    }
+func (m *CLIManager) run() {
+	defer m.sock.Close()
+	reader := bufio.NewReader(m.sock)
+	for {
+		line, _, err := reader.ReadLine()
+		if err != nil && err != syscall.EINTR {
+			return
+		} else {
+			sippy_utils.SafeCall(func() { m.commandCb(m, string(line)) }, nil, m.logger)
+		}
+	}
 }
 
-
-func (self *CLIManager) Send(data string) {
-    for len(data) > 0 {
-        n, err := self.sock.Write([]byte(data))
-        if err != nil && err != syscall.EINTR {
-            return
-        }
-        data = data[n:]
-    }
+func (m *CLIManager) Send(data string) {
+	for len(data) > 0 {
+		n, err := m.sock.Write([]byte(data))
+		if err != nil && err != syscall.EINTR {
+			return
+		}
+		data = data[n:]
+	}
 }
 
-func (self *CLIManager) Close() {
-    self.sock.Close()
+func (m *CLIManager) Close() {
+	m.sock.Close()
 }
 
-func (self *CLIManager) RemoteAddr() net.Addr {
-    return self.sock.RemoteAddr()
+func (m *CLIManager) RemoteAddr() net.Addr {
+	return m.sock.RemoteAddr()
 }

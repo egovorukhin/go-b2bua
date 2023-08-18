@@ -25,106 +25,106 @@
 package sippy_security
 
 import (
-    "crypto/aes"
-    "crypto/cipher"
-    "crypto/rand"
-    "encoding/binary"
-    "encoding/hex"
-    "time"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/binary"
+	"encoding/hex"
+	"time"
 
-    "github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/sippy/go-b2bua/sippy/utils"
 )
 
 const (
-    VTIME = int64(32)
+	VTIME = int64(32)
 )
 
 type hashOracle struct {
-    ac      *AESCipher
+	ac *AESCipher
 }
 
 type AESCipher struct {
-    cipher  cipher.Block
+	cipher cipher.Block
 }
 
 var _key []byte
 var HashOracle *hashOracle
 
 func init() {
-    var err error
+	var err error
 
-    _key = make([]byte, aes.BlockSize * 2)
-    rand.Read(_key)
-    HashOracle, err = newHashOracle()
-    if err != nil {
-        panic("hashOracle cannot be created: " + err.Error())
-    }
+	_key = make([]byte, aes.BlockSize*2)
+	rand.Read(_key)
+	HashOracle, err = newHashOracle()
+	if err != nil {
+		panic("hashOracle cannot be created: " + err.Error())
+	}
 }
 
 func newHashOracle() (*hashOracle, error) {
-    ac, err := NewAESCipher()
-    if err != nil {
-        return nil, err
-    }
-    return &hashOracle{
-        ac  : ac,
-    }, nil
+	ac, err := NewAESCipher()
+	if err != nil {
+		return nil, err
+	}
+	return &hashOracle{
+		ac: ac,
+	}, nil
 }
 
-func (self *hashOracle) EmitChallenge(cmask int64, now_mono time.Time) string {
-    ts64 := (now_mono.Unix() << NUM_OF_DGSTS) | cmask
-    return self.ac.Encrypt(ts64)
+func (s *hashOracle) EmitChallenge(cmask int64, now_mono time.Time) string {
+	ts64 := (now_mono.Unix() << NUM_OF_DGSTS) | cmask
+	return s.ac.Encrypt(ts64)
 }
 
-func (self *hashOracle) ValidateChallenge(cryptic string, cmask int64, now_mono time.Time) bool {
-    new_ts := now_mono.Unix()
-    decryptic, err := self.ac.Decrypt(cryptic)
-    if err != nil || (cmask & decryptic) == 0 {
-        return false
-    }
-    orig_ts := decryptic >> NUM_OF_DGSTS
-    tsdiff := new_ts - orig_ts
-    if tsdiff < 0 || tsdiff > VTIME {
-        return false
-    }
-    return true
+func (s *hashOracle) ValidateChallenge(cryptic string, cmask int64, now_mono time.Time) bool {
+	new_ts := now_mono.Unix()
+	decryptic, err := s.ac.Decrypt(cryptic)
+	if err != nil || (cmask&decryptic) == 0 {
+		return false
+	}
+	orig_ts := decryptic >> NUM_OF_DGSTS
+	tsdiff := new_ts - orig_ts
+	if tsdiff < 0 || tsdiff > VTIME {
+		return false
+	}
+	return true
 }
 
 func NewAESCipher() (*AESCipher, error) {
-    cipher, err := aes.NewCipher(_key)
-    if err != nil {
-        return nil, err
-    }
-    return &AESCipher{
-        cipher  : cipher,
-    }, nil
+	cipher, err := aes.NewCipher(_key)
+	if err != nil {
+		return nil, err
+	}
+	return &AESCipher{
+		cipher: cipher,
+	}, nil
 }
 
-func (self *AESCipher) Encrypt(ts64 int64) string {
-    buf := make([]byte, 8)
-    binary.BigEndian.PutUint64(buf, uint64(ts64))
-    raw := make([]byte, 16)
-    hex.Encode(raw, buf)
-    ciphertext := make([]byte, aes.BlockSize + len(raw))
-    iv := ciphertext[:aes.BlockSize]
-    rand.Read(iv)
-    stream := cipher.NewOFB(self.cipher, iv)
-    stream.XORKeyStream(ciphertext[aes.BlockSize:], raw)
-    return sippy_utils.B64EncodeNoPad(ciphertext)
+func (s *AESCipher) Encrypt(ts64 int64) string {
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(ts64))
+	raw := make([]byte, 16)
+	hex.Encode(raw, buf)
+	ciphertext := make([]byte, aes.BlockSize+len(raw))
+	iv := ciphertext[:aes.BlockSize]
+	rand.Read(iv)
+	stream := cipher.NewOFB(s.cipher, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], raw)
+	return sippy_utils.B64EncodeNoPad(ciphertext)
 }
 
-func (self *AESCipher) Decrypt(enc string) (int64, error) {
-    raw, err := sippy_utils.B64DecodeNoPad(enc)
-    if err != nil {
-        return 0, err
-    }
-    iv := raw[:aes.BlockSize]
-    stream := cipher.NewOFB(self.cipher, iv)
-    decrypted := make([]byte, 16)
-    stream.XORKeyStream(decrypted, raw[aes.BlockSize:])
-    buf := make([]byte, 8)
-    if _, err := hex.Decode(buf, decrypted); err != nil {
-        return 0, err
-    }
-    return int64(binary.BigEndian.Uint64(buf)), nil
+func (s *AESCipher) Decrypt(enc string) (int64, error) {
+	raw, err := sippy_utils.B64DecodeNoPad(enc)
+	if err != nil {
+		return 0, err
+	}
+	iv := raw[:aes.BlockSize]
+	stream := cipher.NewOFB(s.cipher, iv)
+	decrypted := make([]byte, 16)
+	stream.XORKeyStream(decrypted, raw[aes.BlockSize:])
+	buf := make([]byte, 8)
+	if _, err := hex.Decode(buf, decrypted); err != nil {
+		return 0, err
+	}
+	return int64(binary.BigEndian.Uint64(buf)), nil
 }

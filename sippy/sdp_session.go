@@ -25,37 +25,37 @@
 package sippy
 
 import (
-    "github.com/sippy/go-b2bua/sippy/sdp"
-    "github.com/sippy/go-b2bua/sippy/types"
+	"github.com/sippy/go-b2bua/sippy/sdp"
+	"github.com/sippy/go-b2bua/sippy/types"
 )
 
 type SdpSession struct {
-    last_origin *sippy_sdp.SdpOrigin
-    origin      *sippy_sdp.SdpOrigin
+	last_origin *sippy_sdp.SdpOrigin
+	origin      *sippy_sdp.SdpOrigin
 }
 
 func NewSdpSession() *SdpSession {
-    return &SdpSession{
-        origin      : sippy_sdp.NewSdpOrigin(),
-    }
+	return &SdpSession{
+		origin: sippy_sdp.NewSdpOrigin(),
+	}
 }
 
-func (self *SdpSession) FixupVersion(body sippy_types.MsgBody) error {
-    if body == nil {
-        return nil
-    }
-    sdp, err := body.GetSdp()
-    if err != nil {
-        return err
-    }
-    new_origin := sdp.GetOHeader().GetCopy()
-    if self.last_origin != nil {
-        if self.last_origin.GetSessionId() != new_origin.GetSessionId() ||
-                self.last_origin.GetVersion() != new_origin.GetVersion() {
-            self.origin.IncVersion()
-        }
-    }
-    self.last_origin = new_origin
-    sdp.SetOHeader(self.origin.GetCopy())
-    return nil
+func (s *SdpSession) FixupVersion(body sippy_types.MsgBody) error {
+	if body == nil {
+		return nil
+	}
+	sdp, err := body.GetSdp()
+	if err != nil {
+		return err
+	}
+	new_origin := sdp.GetOHeader().GetCopy()
+	if s.last_origin != nil {
+		if s.last_origin.GetSessionId() != new_origin.GetSessionId() ||
+			s.last_origin.GetVersion() != new_origin.GetVersion() {
+			s.origin.IncVersion()
+		}
+	}
+	s.last_origin = new_origin
+	sdp.SetOHeader(s.origin.GetCopy())
+	return nil
 }

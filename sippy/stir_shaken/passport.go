@@ -25,95 +25,95 @@
 package sippy_sshaken
 
 import (
-    "errors"
-    "time"
+	"errors"
+	"time"
 )
 
 type sshaken_passport struct {
-    ppt_hdr_param   string
-    alg_hdr_param   string
-    signature       []byte
-    Header          sshaken_header
-    Payload         sshaken_payload
+	ppt_hdr_param string
+	alg_hdr_param string
+	signature     []byte
+	Header        sshaken_header
+	Payload       sshaken_payload
 }
 
 type sshaken_header struct {
-    Alg     string  `json:"alg"`
-    Ppt     string  `json:"ppt"`
-    Typ     string  `json:"typ"`
-    X5u     string  `json:"x5u"`
+	Alg string `json:"alg"`
+	Ppt string `json:"ppt"`
+	Typ string `json:"typ"`
+	X5u string `json:"x5u"`
 }
 
 type sshaken_payload struct {
-    Attest  string          `json:"attest"`
-    Dest    sshaken_dest    `json:"dest"`
-    Iat     int64           `json:"iat"`
-    Orig    sshaken_orig    `json:"orig"`
-    Origid  string          `json:"origid"`
+	Attest string       `json:"attest"`
+	Dest   sshaken_dest `json:"dest"`
+	Iat    int64        `json:"iat"`
+	Orig   sshaken_orig `json:"orig"`
+	Origid string       `json:"origid"`
 }
 
 type sshaken_dest struct {
-    TN      []string    `json:"tn"`
+	TN []string `json:"tn"`
 }
 
 type sshaken_orig struct {
-    TN      string      `json:"tn"`
+	TN string `json:"tn"`
 }
 
-func (self *sshaken_passport) Origid() string {
-    return self.Payload.Origid
+func (s *sshaken_passport) Origid() string {
+	return s.Payload.Origid
 }
 
-func (self *sshaken_passport) Attest() string {
-    return self.Payload.Attest
+func (s *sshaken_passport) Attest() string {
+	return s.Payload.Attest
 }
 
-func (self *sshaken_passport) X5u() string {
-    return self.Header.X5u
+func (s *sshaken_passport) X5u() string {
+	return s.Header.X5u
 }
 
-func (self *sshaken_passport) OrigTN() string {
-    return self.Payload.Orig.TN
+func (s *sshaken_passport) OrigTN() string {
+	return s.Payload.Orig.TN
 }
 
-func (self *sshaken_passport) DestTN() string {
-    if len(self.Payload.Dest.TN) > 0 {
-        return self.Payload.Dest.TN[0]
-    }
-    return ""
+func (s *sshaken_passport) DestTN() string {
+	if len(s.Payload.Dest.TN) > 0 {
+		return s.Payload.Dest.TN[0]
+	}
+	return ""
 }
 
-func (self *sshaken_passport) Iat() time.Time {
-    return time.Unix(self.Payload.Iat, 0)
+func (s *sshaken_passport) Iat() time.Time {
+	return time.Unix(s.Payload.Iat, 0)
 }
 
-func (self *sshaken_passport) check_claims() error {
-    if self.Header.Alg != "ES256" {
-        return errors.New("'alg' value should be 'ES256'");
-    }
-    if self.Header.Ppt != "shaken" {
-        return errors.New("'ppt' value should be 'shaken'")
-    }
-    if self.Header.Typ != "passport" {
-        return errors.New("'typ' value should be 'passport'")
-    }
-    if self.Header.X5u == "" {
-        return errors.New("'x5u' value should not be empty")
-    }
-    if self.Payload.Attest == "" {
-        return errors.New("'attest' value should not be empty")
-    }
-    if len(self.Payload.Dest.TN) == 0 {
-        return errors.New("dest tn value should not be empty")
-    }
-    if self.Payload.Iat == 0 {
-        return errors.New("missing 'iat' claim")
-    }
-    if self.Payload.Orig.TN == "" {
-        return errors.New("orig tn value should not be empty")
-    }
-    if self.Payload.Origid == "" {
-        return errors.New("'origid' value should not be empty")
-    }
-    return nil
+func (s *sshaken_passport) check_claims() error {
+	if s.Header.Alg != "ES256" {
+		return errors.New("'alg' value should be 'ES256'")
+	}
+	if s.Header.Ppt != "shaken" {
+		return errors.New("'ppt' value should be 'shaken'")
+	}
+	if s.Header.Typ != "passport" {
+		return errors.New("'typ' value should be 'passport'")
+	}
+	if s.Header.X5u == "" {
+		return errors.New("'x5u' value should not be empty")
+	}
+	if s.Payload.Attest == "" {
+		return errors.New("'attest' value should not be empty")
+	}
+	if len(s.Payload.Dest.TN) == 0 {
+		return errors.New("dest tn value should not be empty")
+	}
+	if s.Payload.Iat == 0 {
+		return errors.New("missing 'iat' claim")
+	}
+	if s.Payload.Orig.TN == "" {
+		return errors.New("orig tn value should not be empty")
+	}
+	if s.Payload.Origid == "" {
+		return errors.New("'origid' value should not be empty")
+	}
+	return nil
 }

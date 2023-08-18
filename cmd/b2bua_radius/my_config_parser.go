@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 // Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
 //
@@ -27,244 +26,245 @@
 package main
 
 import (
-    "errors"
-    "flag"
-    "strconv"
-    "strings"
-    "time"
+	"errors"
+	"flag"
+	"strconv"
+	"strings"
+	"time"
 
-    "github.com/sippy/go-b2bua/sippy/conf"
-    "github.com/sippy/go-b2bua/sippy/log"
-    "github.com/sippy/go-b2bua/sippy/net"
+	"github.com/sippy/go-b2bua/sippy/conf"
+	"github.com/sippy/go-b2bua/sippy/log"
+	"github.com/sippy/go-b2bua/sippy/net"
 )
 
 type myConfigParser struct {
-    sippy_conf.Config
-    accept_ips          map[string]bool
-    Static_route        string
-    Sip_proxy           string
-    //auth_enable         bool
-    Rtp_proxy_clients   []string
-    pass_headers        []string
-    keepalive_ans       time.Duration
-    keepalive_orig      time.Duration
-    B2bua_socket        string
-    Hrtb_retr_ival      time.Duration
-    Hrtb_ival           time.Duration
+	sippy_conf.Config
+	accept_ips   map[string]bool
+	Static_route string
+	Sip_proxy    string
+	//auth_enable         bool
+	Rtp_proxy_clients []string
+	pass_headers      []string
+	keepalive_ans     time.Duration
+	keepalive_orig    time.Duration
+	B2bua_socket      string
+	Hrtb_retr_ival    time.Duration
+	Hrtb_ival         time.Duration
 }
 
 func NewMyConfigParser() *myConfigParser {
-    return &myConfigParser{
-        Rtp_proxy_clients   : make([]string, 0),
-        accept_ips          : make(map[string]bool),
-        //auth_enable         : false,
-        pass_headers        : make([]string, 0),
-    }
+	return &myConfigParser{
+		Rtp_proxy_clients: make([]string, 0),
+		accept_ips:        make(map[string]bool),
+		//auth_enable         : false,
+		pass_headers: make([]string, 0),
+	}
 }
 
-func (self *myConfigParser) Parse() error {
-/*
-    global_config.digest_auth = true
-    global_config.start_acct_enable = false
-    global_config.keepalive_ans = 0
-    global_config.keepalive_orig = 0
-    global_config.auth_enable = true
-    global_config.acct_enable = true
-    global_config._pass_headers = []
-    //global_config._orig_argv = sys.argv[:]
-    //global_config._orig_cwd = os.getcwd()
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:HC:W:',
-          global_config.get_longopts())
-    except getopt.GetoptError:
-        usage(global_config)
-    global_config['foreground'] = false
-    global_config['pidfile'] = '/var/run/b2bua.pid'
-    global_config['logfile'] = '/var/log/b2bua.log'
-    global_config['b2bua_socket'] = '/var/run/b2bua.sock'
-    global_config['_sip_address'] = SipConf.my_address
-    global_config['_sip_port'] = SipConf.my_port
-    rtp_proxy_clients = []
-    writeconf = nil
-    for o, a in opts:
-        if o == '-f':
-            global_config['foreground'] = true
-            continue
-        if o == '-l':
-            global_config.check_and_set('sip_address', a)
-            continue
-        if o == '-P':
-            global_config.check_and_set('pidfile', a)
-            continue
-            */
-    var logfile string
-    flag.StringVar(&logfile, "L", "/var/log/sip.log", "logfile")
-    flag.StringVar(&logfile, "logfile", "/var/log/sip.log", "path to the B2BUA log file")
+func (s *myConfigParser) Parse() error {
+	/*
+	   global_config.digest_auth = true
+	   global_config.start_acct_enable = false
+	   global_config.keepalive_ans = 0
+	   global_config.keepalive_orig = 0
+	   global_config.auth_enable = true
+	   global_config.acct_enable = true
+	   global_config._pass_headers = []
+	   //global_config._orig_argv = sys.argv[:]
+	   //global_config._orig_cwd = os.getcwd()
+	   try:
+	       opts, args = getopt.getopt(sys.argv[1:], 'fDl:p:d:P:L:s:a:t:T:k:m:A:ur:F:R:h:c:M:HC:W:',
+	         global_config.get_longopts())
+	   except getopt.GetoptError:
+	       usage(global_config)
+	   global_config['foreground'] = false
+	   global_config['pidfile'] = '/var/run/b2bua.pid'
+	   global_config['logfile'] = '/var/log/b2bua.log'
+	   global_config['b2bua_socket'] = '/var/run/b2bua.sock'
+	   global_config['_sip_address'] = SipConf.my_address
+	   global_config['_sip_port'] = SipConf.my_port
+	   rtp_proxy_clients = []
+	   writeconf = nil
+	   for o, a in opts:
+	       if o == '-f':
+	           global_config['foreground'] = true
+	           continue
+	       if o == '-l':
+	           global_config.check_and_set('sip_address', a)
+	           continue
+	       if o == '-P':
+	           global_config.check_and_set('pidfile', a)
+	           continue
+	*/
+	var logfile string
+	flag.StringVar(&logfile, "L", "/var/log/sip.log", "logfile")
+	flag.StringVar(&logfile, "logfile", "/var/log/sip.log", "path to the B2BUA log file")
 
-    flag.StringVar(&self.Static_route, "s", "", "static route for all SIP calls")
-    flag.StringVar(&self.Static_route, "static_route", "", "static route for all SIP calls")
+	flag.StringVar(&s.Static_route, "s", "", "static route for all SIP calls")
+	flag.StringVar(&s.Static_route, "static_route", "", "static route for all SIP calls")
 
-    var accept_ips string
-    flag.StringVar(&accept_ips, "a", "", "accept_ips")
-    flag.StringVar(&accept_ips, "accept_ips", "", "IP addresses that we will only be accepting incoming " +
-                                "calls from (comma-separated list). If the parameter " +
-                                "is not specified, we will accept from any IP and " +
-                                "then either try to authenticate if authentication " +
-                                "is enabled, or just let them to pass through")
+	var accept_ips string
+	flag.StringVar(&accept_ips, "a", "", "accept_ips")
+	flag.StringVar(&accept_ips, "accept_ips", "", "IP addresses that we will only be accepting incoming "+
+		"calls from (comma-separated list). If the parameter "+
+		"is not specified, we will accept from any IP and "+
+		"then either try to authenticate if authentication "+
+		"is enabled, or just let them to pass through")
 
-    var hrtb_ival int
-    flag.IntVar(&hrtb_ival, "rtpp_hrtb_ival", 10, "rtpproxy hearbeat interval (seconds)")
-    var hrtb_retr_ival int
-    flag.IntVar(&hrtb_retr_ival, "rtpp_hrtb_retr_ival", 60, "rtpproxy hearbeat retry interval (seconds)")
-/*
-        if o == '-a':
-            global_config.check_and_set('accept_ips', a)
-            continue
-        if o == '-D':
-            global_config['digest_auth'] = false
-            continue
-        if o == '-A':
-            acct_level = int(a.strip())
-            if acct_level == 0:
-                global_config['acct_enable'] = false
-                global_config['start_acct_enable'] = false
-            elif acct_level == 1:
-                global_config['acct_enable'] = true
-                global_config['start_acct_enable'] = false
-            elif acct_level == 2:
-                global_config['acct_enable'] = true
-                global_config['start_acct_enable'] = true
-            else:
-                sys.__stderr__.write('ERROR: -A argument not in the range 0-2\n')
-                usage(global_config, true)
-            continue
-        if o == '-t':
-            global_config.check_and_set('static_tr_in', a)
-            continue
-        if o == '-T':
-            global_config.check_and_set('static_tr_out', a)
-            continue
-*/
-    var ka_level, keepalive_ans, keepalive_orig int
-    flag.IntVar(&ka_level, "k", 0, "keepalive level")
-    flag.IntVar(&keepalive_ans, "keepalive_ans", 0, "send periodic \"keep-alive\" re-INVITE requests on " +
-                                "answering (ingress) call leg and disconnect a call " +
-                                "if the re-INVITE fails (period in seconds, 0 to disable)")
-    flag.IntVar(&keepalive_orig, "keepalive_orig", 0, "send periodic \"keep-alive\" re-INVITE requests on " +
-                             "originating (egress) call leg and disconnect a call " +
-                             "if the re-INVITE fails (period in seconds, 0 to disable)")
-/*
-        if o == '-m':
-            global_config.check_and_set('max_credit_time', a)
-            continue
-*/
-    //flag.BoolVar(&self.auth_enable, "a", false, "auth_enable")
-    //flag.BoolVar(&self.auth_enable, "auth_enable", false, "enable or disable Radius authentication")
-/*
-        if o == '-r':
-            global_config.check_and_set('rtp_proxy_client', a)
-            continue
-        if o == '-F':
-            global_config.check_and_set('allowed_pts', a)
-            continue
-        if o == '-R':
-            global_config.check_and_set('radiusclient.conf', a)
-            continue
-*/
-    var pass_header, pass_headers string
-    flag.StringVar(&pass_header, "h", "", "pass_header")
-    flag.StringVar(&pass_headers, "pass_headers", "", "list of SIP header field names that the B2BUA will " +
-                                "pass from ingress call leg to egress call leg " +
-                                "unmodified (comma-separated list)")
-    flag.StringVar(&self.B2bua_socket, "c", "/var/run/b2bua.sock", "b2bua_socket")
-    flag.StringVar(&self.B2bua_socket, "b2bua_socket", "/var/run/b2bua.sock", "path to the B2BUA command socket or address to listen " +
-                                        "for commands in the format \"udp:host[:port]\"")
-/*
-        if o == '-M':
-            global_config.check_and_set('max_radiusclients', a)
-            continue
-        if o == '-H':
-            global_config['hide_call_id'] = true
-            continue
-        if o in ('-C', '--config'):
-            global_config.read(a.strip())
-            continue
-        if o.startswith('--'):
-            global_config.check_and_set(o[2:], a)
-            continue
-        if o == '-W':
-            writeconf = a.strip()
-            continue
-*/
-    var rtp_proxy_clients, rtp_proxy_client string
-    flag.StringVar(&rtp_proxy_clients, "rtp_proxy_clients", "", "comma-separated list of paths or addresses of the " +
-                                                                "RTPproxy control socket. Address in the format " +
-                                                                "\"udp:host[:port]\" (comma-separated list)")
-    flag.StringVar(&rtp_proxy_client, "rtp_proxy_client", "", "RTPproxy control socket. Address in the format \"udp:host[:port]\"")
-    flag.StringVar(&self.Sip_proxy, "sip_proxy", "", "address of the helper proxy to handle \"REGISTER\" " +
-                                 "and \"SUBSCRIBE\" messages. Address in the format \"host[:port]\"")
-    var sip_port int
-    flag.IntVar(&sip_port, "p", 5060, "sip_port")
-    flag.IntVar(&sip_port, "sip_port", 5060, "local UDP port to listen for incoming SIP requests")
-    flag.Parse()
+	var hrtb_ival int
+	flag.IntVar(&hrtb_ival, "rtpp_hrtb_ival", 10, "rtpproxy hearbeat interval (seconds)")
+	var hrtb_retr_ival int
+	flag.IntVar(&hrtb_retr_ival, "rtpp_hrtb_retr_ival", 60, "rtpproxy hearbeat retry interval (seconds)")
+	/*
+	   if o == '-a':
+	       global_config.check_and_set('accept_ips', a)
+	       continue
+	   if o == '-D':
+	       global_config['digest_auth'] = false
+	       continue
+	   if o == '-A':
+	       acct_level = int(a.strip())
+	       if acct_level == 0:
+	           global_config['acct_enable'] = false
+	           global_config['start_acct_enable'] = false
+	       elif acct_level == 1:
+	           global_config['acct_enable'] = true
+	           global_config['start_acct_enable'] = false
+	       elif acct_level == 2:
+	           global_config['acct_enable'] = true
+	           global_config['start_acct_enable'] = true
+	       else:
+	           sys.__stderr__.write('ERROR: -A argument not in the range 0-2\n')
+	           usage(global_config, true)
+	       continue
+	   if o == '-t':
+	       global_config.check_and_set('static_tr_in', a)
+	       continue
+	   if o == '-T':
+	       global_config.check_and_set('static_tr_out', a)
+	       continue
+	*/
+	var ka_level, keepalive_ans, keepalive_orig int
+	flag.IntVar(&ka_level, "k", 0, "keepalive level")
+	flag.IntVar(&keepalive_ans, "keepalive_ans", 0, "send periodic \"keep-alive\" re-INVITE requests on "+
+		"answering (ingress) call leg and disconnect a call "+
+		"if the re-INVITE fails (period in seconds, 0 to disable)")
+	flag.IntVar(&keepalive_orig, "keepalive_orig", 0, "send periodic \"keep-alive\" re-INVITE requests on "+
+		"originating (egress) call leg and disconnect a call "+
+		"if the re-INVITE fails (period in seconds, 0 to disable)")
+	/*
+	   if o == '-m':
+	       global_config.check_and_set('max_credit_time', a)
+	       continue
+	*/
+	//flag.BoolVar(&s.auth_enable, "a", false, "auth_enable")
+	//flag.BoolVar(&s.auth_enable, "auth_enable", false, "enable or disable Radius authentication")
+	/*
+	   if o == '-r':
+	       global_config.check_and_set('rtp_proxy_client', a)
+	       continue
+	   if o == '-F':
+	       global_config.check_and_set('allowed_pts', a)
+	       continue
+	   if o == '-R':
+	       global_config.check_and_set('radiusclient.conf', a)
+	       continue
+	*/
+	var pass_header, pass_headers string
+	flag.StringVar(&pass_header, "h", "", "pass_header")
+	flag.StringVar(&pass_headers, "pass_headers", "", "list of SIP header field names that the B2BUA will "+
+		"pass from ingress call leg to egress call leg "+
+		"unmodified (comma-separated list)")
+	flag.StringVar(&s.B2bua_socket, "c", "/var/run/b2bua.sock", "b2bua_socket")
+	flag.StringVar(&s.B2bua_socket, "b2bua_socket", "/var/run/b2bua.sock", "path to the B2BUA command socket or address to listen "+
+		"for commands in the format \"udp:host[:port]\"")
+	/*
+	   if o == '-M':
+	       global_config.check_and_set('max_radiusclients', a)
+	       continue
+	   if o == '-H':
+	       global_config['hide_call_id'] = true
+	       continue
+	   if o in ('-C', '--config'):
+	       global_config.read(a.strip())
+	       continue
+	   if o.startswith('--'):
+	       global_config.check_and_set(o[2:], a)
+	       continue
+	   if o == '-W':
+	       writeconf = a.strip()
+	       continue
+	*/
+	var rtp_proxy_clients, rtp_proxy_client string
+	flag.StringVar(&rtp_proxy_clients, "rtp_proxy_clients", "", "comma-separated list of paths or addresses of the "+
+		"RTPproxy control socket. Address in the format "+
+		"\"udp:host[:port]\" (comma-separated list)")
+	flag.StringVar(&rtp_proxy_client, "rtp_proxy_client", "", "RTPproxy control socket. Address in the format \"udp:host[:port]\"")
+	flag.StringVar(&s.Sip_proxy, "sip_proxy", "", "address of the helper proxy to handle \"REGISTER\" "+
+		"and \"SUBSCRIBE\" messages. Address in the format \"host[:port]\"")
+	var sip_port int
+	flag.IntVar(&sip_port, "p", 5060, "sip_port")
+	flag.IntVar(&sip_port, "sip_port", 5060, "local UDP port to listen for incoming SIP requests")
+	flag.Parse()
 
-    if sip_port <= 0 || sip_port > 65535 {
-        return errors.New("sip_port should be in the range 1-65535")
-    }
+	if sip_port <= 0 || sip_port > 65535 {
+		return errors.New("sip_port should be in the range 1-65535")
+	}
 
-    rtp_proxy_clients += "," + rtp_proxy_client
-    arr := strings.Split(rtp_proxy_clients, ",")
-    for _, s := range arr {
-        s = strings.TrimSpace(s)
-        if s != "" {
-            self.Rtp_proxy_clients = append(self.Rtp_proxy_clients, s)
-        }
-    }
-    arr = strings.Split(accept_ips, ",")
-    for _, s := range arr {
-        s = strings.TrimSpace(s)
-        if s != "" {
-            self.accept_ips[s] = true
-        }
-    }
-    pass_headers += "," + pass_header
-    arr = strings.Split(pass_headers, ",")
-    for _, s := range arr {
-        s = strings.TrimSpace(s)
-        if s != "" {
-            self.pass_headers = append(self.pass_headers, s)
-        }
-    }
-    switch ka_level {
-    case 0:
-        // do nothing
-    case 1:
-        self.keepalive_ans = 32 * time.Second
-    case 2:
-        self.keepalive_orig = 32 * time.Second
-    case 3:
-        self.keepalive_ans = 32 * time.Second
-        self.keepalive_orig = 32 * time.Second
-    default:
-        return errors.New("-k argument not in the range 0-3")
-    }
-    if keepalive_ans > 0 {
-        self.keepalive_ans = time.Duration(keepalive_ans) * time.Second
-    }
-    if keepalive_orig > 0 {
-        self.keepalive_orig = time.Duration(keepalive_orig) * time.Second
-    }
-    error_logger := sippy_log.NewErrorLogger()
-    sip_logger, err := sippy_log.NewSipLogger("b2bua", logfile)
-    if err != nil {
-        return err
-    }
-    self.Hrtb_ival = time.Duration(hrtb_ival) * time.Second
-    self.Hrtb_retr_ival = time.Duration(hrtb_retr_ival) * time.Second
-    self.Config = sippy_conf.NewConfig(error_logger, sip_logger)
-    self.SetMyPort(sippy_net.NewMyPort(strconv.Itoa(sip_port)))
-    return nil
+	rtp_proxy_clients += "," + rtp_proxy_client
+	arr := strings.Split(rtp_proxy_clients, ",")
+	for _, s := range arr {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			s.Rtp_proxy_clients = append(s.Rtp_proxy_clients, s)
+		}
+	}
+	arr = strings.Split(accept_ips, ",")
+	for _, s := range arr {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			s.accept_ips[s] = true
+		}
+	}
+	pass_headers += "," + pass_header
+	arr = strings.Split(pass_headers, ",")
+	for _, s := range arr {
+		s = strings.TrimSpace(s)
+		if s != "" {
+			s.pass_headers = append(s.pass_headers, s)
+		}
+	}
+	switch ka_level {
+	case 0:
+		// do nothing
+	case 1:
+		s.keepalive_ans = 32 * time.Second
+	case 2:
+		s.keepalive_orig = 32 * time.Second
+	case 3:
+		s.keepalive_ans = 32 * time.Second
+		s.keepalive_orig = 32 * time.Second
+	default:
+		return errors.New("-k argument not in the range 0-3")
+	}
+	if keepalive_ans > 0 {
+		s.keepalive_ans = time.Duration(keepalive_ans) * time.Second
+	}
+	if keepalive_orig > 0 {
+		s.keepalive_orig = time.Duration(keepalive_orig) * time.Second
+	}
+	error_logger := sippy_log.NewErrorLogger()
+	sip_logger, err := sippy_log.NewSipLogger("b2bua", logfile)
+	if err != nil {
+		return err
+	}
+	s.Hrtb_ival = time.Duration(hrtb_ival) * time.Second
+	s.Hrtb_retr_ival = time.Duration(hrtb_retr_ival) * time.Second
+	s.Config = sippy_conf.NewConfig(error_logger, sip_logger)
+	s.SetMyPort(sippy_net.NewMyPort(strconv.Itoa(sip_port)))
+	return nil
 }
+
 /*
 from ConfigParser import RawConfigParser
 from SipConf import SipConf
@@ -339,85 +339,85 @@ class MyConfigParser(RawConfigParser):
     default_section = nil
     _private_keys = nil
 
-    def __init__(self, default_section = 'general'):
-        self.default_section = default_section
-        self._private_keys = {}
-        RawConfigParser.__init__(self)
-        self.add_section(self.default_section)
+    def __init__(s, default_section = 'general'):
+        s.default_section = default_section
+        s._private_keys = {}
+        RawConfigParser.__init__(s)
+        s.add_section(s.default_section)
 
-    def __getitem__(self, key):
+    def __getitem__(s, key):
         if key.startswith('_'):
-            return self._private_keys[key]
+            return s._private_keys[key]
         value_type  = SUPPORTED_OPTIONS[key][0]
         if value_type  == 'B':
-            return self.getboolean(self.default_section, key)
+            return s.getboolean(s.default_section, key)
         elif value_type == 'I':
-            return self.getint(self.default_section, key)
-        return self.get(self.default_section, key)
+            return s.getint(s.default_section, key)
+        return s.get(s.default_section, key)
 
-    def __setitem__(self, key, value):
+    def __setitem__(s, key, value):
         if key.startswith('_'):
-            self._private_keys[key] = value
+            s._private_keys[key] = value
         else:
-            self.set(self.default_section, key, str(value))
+            s.set(s.default_section, key, str(value))
         return
 
-    def has_key(self, key):
-        return self.__contains__(key)
+    def has_key(s, key):
+        return s.__contains__(key)
 
-    def __contains__(self, key):
+    def __contains__(s, key):
         if key.startswith('_'):
-            return self._private_keys.has_key(key)
-        return self.has_option(self.default_section, key)
+            return s._private_keys.has_key(key)
+        return s.has_option(s.default_section, key)
 
-    def get(self, *args):
+    def get(s, *args):
         if len(args) == 1:
-            return self.__getitem__(args[0])
-        return RawConfigParser.get(self, *args)
+            return s.__getitem__(args[0])
+        return RawConfigParser.get(s, *args)
 
-    def getdefault(self, key, default_value):
-        if self.__contains__(key):
-            return self.__getitem__(key)
+    def getdefault(s, key, default_value):
+        if s.__contains__(key):
+            return s.__getitem__(key)
         return default_value
 
-    def get_longopts(self):
+    def get_longopts(s):
         return tuple([x + '=' for x in SUPPORTED_OPTIONS.keys()])
 
-    def read(self, fname):
-        RawConfigParser.readfp(self, open(fname))
-        for key in tuple(self.options(self.default_section)):
-            self.check_and_set(key, RawConfigParser.get(self, \
-              self.default_section, key), false)
+    def read(s, fname):
+        RawConfigParser.readfp(s, open(fname))
+        for key in tuple(s.options(s.default_section)):
+            s.check_and_set(key, RawConfigParser.get(s, \
+              s.default_section, key), false)
 
-    def check_and_set(self, key, value, compat = true):
+    def check_and_set(s, key, value, compat = true):
         value = value.strip()
         if compat:
             if key == 'rtp_proxy_client':
                 # XXX compatibility option
-                if self.has_key('_rtp_proxy_clients'):
-                    self['_rtp_proxy_clients'].append(value)
+                if s.has_key('_rtp_proxy_clients'):
+                    s['_rtp_proxy_clients'].append(value)
                 else:
-                    self['_rtp_proxy_clients'] = [value,]
-                if self.has_key('rtp_proxy_clients'):
-                    self['rtp_proxy_clients'] += ',' + value
+                    s['_rtp_proxy_clients'] = [value,]
+                if s.has_key('rtp_proxy_clients'):
+                    s['rtp_proxy_clients'] += ',' + value
                 else:
-                    self['rtp_proxy_clients'] = value
+                    s['rtp_proxy_clients'] = value
                 return
             elif key == 'pass_header':
                 # XXX compatibility option
-                if self.has_key('_pass_headers'):
-                    self['_pass_headers'].append(value)
+                if s.has_key('_pass_headers'):
+                    s['_pass_headers'].append(value)
                 else:
-                    self['_pass_headers'] = [value,]
-                if self.has_key('pass_headers'):
-                    self['pass_headers'] += ',' + value
+                    s['_pass_headers'] = [value,]
+                if s.has_key('pass_headers'):
+                    s['pass_headers'] += ',' + value
                 else:
-                    self['pass_headers'] = value
+                    s['pass_headers'] = value
                 return
 
         value_type  = SUPPORTED_OPTIONS[key][0]
         if value_type == 'B':
-            if value.lower() ! in self._boolean_states:
+            if value.lower() ! in s._boolean_states:
                 raise ValueError, 'Not a boolean: %s' % value
         elif value_type == 'I':
             _value = int(value)
@@ -428,26 +428,26 @@ class MyConfigParser(RawConfigParser):
             if _value <= 0:
                 raise ValueError, 'max_credit_time should be more than zero'
         elif key == 'allowed_pts':
-            self['_allowed_pts'] = [int(x) for x in value.split(',')]
+            s['_allowed_pts'] = [int(x) for x in value.split(',')]
         elif key in ('accept_ips', 'rtp_proxy_clients'):
-            self['_' + key] = [x.strip() for x in value.split(',')]
+            s['_' + key] = [x.strip() for x in value.split(',')]
         elif key == 'pass_headers':
-            self['_' + key] = [x.strip().lower() for x in value.split(',')]
+            s['_' + key] = [x.strip().lower() for x in value.split(',')]
         elif key == 'sip_address':
             if 'my' in dir(value):
-                self['_sip_address'] = value
+                s['_sip_address'] = value
                 value = '*'
             elif value in ('*', '0.0.0.0', '::'):
-                self['_sip_address'] = SipConf.my_address
+                s['_sip_address'] = SipConf.my_address
             else:
-                self['_sip_address'] = value
+                s['_sip_address'] = value
         elif key == 'sip_port':
             if _value <= 0 || _value > 65535:
                 raise ValueError, 'sip_port should be in the range 1-65535'
-            self['_sip_port'] = _value
-        self[key] = value
+            s['_sip_port'] = _value
+        s[key] = value
 
-    def options_help(self):
+    def options_help(s):
         supported_options = SUPPORTED_OPTIONS.items()
         supported_options.sort()
         for option, (value_type, helptext) in supported_options:
@@ -486,10 +486,10 @@ if __name__ == '__main__':
     assert m['_accept_ips'][1] == '5.6.7.8'
 */
 
-func (self *myConfigParser) checkIP(ip string) bool {
-    if len(self.accept_ips) == 0 {
-        return true
-    }
-    _, ok := self.accept_ips[ip]
-    return ok
+func (s *myConfigParser) checkIP(ip string) bool {
+	if len(s.accept_ips) == 0 {
+		return true
+	}
+	_, ok := s.accept_ips[ip]
+	return ok
 }

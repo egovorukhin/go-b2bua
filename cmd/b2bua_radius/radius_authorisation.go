@@ -24,12 +24,13 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 // SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package main
+
 /*
 from Radius_client import Radius_client
 from time import time
 
 class RadiusAuthorisation(Radius_client):
-    def do_auth(self, username, caller, callee, h323_cid, sip_cid, remote_ip, res_cb, \
+    def do_auth(s, username, caller, callee, h323_cid, sip_cid, remote_ip, res_cb, \
       realm = nil, nonce = nil, uri = nil, response = nil, extra_attributes = nil):
         sip_cid = str(sip_cid)
         attributes = nil
@@ -46,12 +47,12 @@ class RadiusAuthorisation(Radius_client):
         if extra_attributes != nil:
             for a, v in extra_attributes:
                 attributes.append((a, v))
-        message = 'sending AAA request:\n' 
+        message = 'sending AAA request:\n'
         message += reduce(lambda x, y: x + y, ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes])
-        self.global_config['_sip_logger'].write(message, call_id = sip_cid)
-        Radius_client.do_auth(self, attributes, self._process_result, res_cb, sip_cid, time())
+        s.global_config['_sip_logger'].write(message, call_id = sip_cid)
+        Radius_client.do_auth(s, attributes, s._process_result, res_cb, sip_cid, time())
 
-    def _process_result(self, results, res_cb, sip_cid, btime):
+    def _process_result(s, results, res_cb, sip_cid, btime):
         delay = time() - btime
         rcode = results[1]
         if rcode in (0, 1):
@@ -63,6 +64,6 @@ class RadiusAuthorisation(Radius_client):
                 message += reduce(lambda x, y: x + y, ['%-32s = \'%s\'\n' % x for x in results[0]])
         else:
             message = 'Error sending AAA request (delay is %.3f)\n' % delay
-        self.global_config['_sip_logger'].write(message, call_id = sip_cid)
+        s.global_config['_sip_logger'].write(message, call_id = sip_cid)
         res_cb(results)
 */

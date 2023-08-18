@@ -1,4 +1,4 @@
-// Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
+// Package sippy_container Copyright (c) 2015 Andrii Pylypenko. All rights reserved.
 //
 // All rights reserved.
 //
@@ -25,48 +25,48 @@
 package sippy_container
 
 type FifoNode struct {
-    next *FifoNode
-    Value interface{}
+	next  *FifoNode
+	Value interface{}
 }
 
 type Fifo interface {
-    Put(interface{})
-    Get() *FifoNode
-    IsEmpty() bool
+	Put(interface{})
+	Get() *FifoNode
+	IsEmpty() bool
 }
 
 type fifo struct {
-    first *FifoNode
-    last *FifoNode
+	first *FifoNode
+	last  *FifoNode
 }
 
-func NewFifo() (*fifo) {
-    return &fifo{ first : nil, last : nil }
+func NewFifo(first, last *FifoNode) Fifo {
+	return &fifo{first: first, last: last}
 }
 
-func (self *fifo) Put(v interface{}) {
-    node := &FifoNode{ next : nil, Value : v }
-    if self.last != nil {
-        self.last.next = node
-        self.last = node
-    } else {
-        self.first = node
-        self.last = node
-    }
+func (f *fifo) Put(v interface{}) {
+	node := &FifoNode{next: nil, Value: v}
+	if f.last != nil {
+		f.last.next = node
+		f.last = node
+	} else {
+		f.first = node
+		f.last = node
+	}
 }
 
-func (self *fifo) Get() (*FifoNode) {
-    node := self.first
-    if node != nil {
-        self.first = node.next
-        node.next = nil
-    }
-    if self.first == nil {
-        self.last = nil
-    }
-    return node
+func (f *fifo) Get() *FifoNode {
+	node := f.first
+	if node != nil {
+		f.first = node.next
+		node.next = nil
+	}
+	if f.first == nil {
+		f.last = nil
+	}
+	return node
 }
 
-func (self *fifo) IsEmpty() bool {
-    return self.first == nil
+func (f *fifo) IsEmpty() bool {
+	return f.first == nil
 }

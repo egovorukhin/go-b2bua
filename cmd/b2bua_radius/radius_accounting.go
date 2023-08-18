@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 // Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
 //
@@ -60,67 +59,67 @@ class RadiusAccounting(object):
     p1xx_ts = nil
     p100_ts = nil
 
-    def __init__(self, global_config, origin, lperiod = nil, send_start = false):
-        self.global_config = global_config
-        self._attributes = [('h323-call-origin', origin), ('h323-call-type', 'VoIP'), \
+    def __init__(s, global_config, origin, lperiod = nil, send_start = false):
+        s.global_config = global_config
+        s._attributes = [('h323-call-origin', origin), ('h323-call-type', 'VoIP'), \
           ('h323-session-protocol', 'sipv2')]
-        self.drec = false
-        self.crec = false
-        self.origin = origin
-        self.lperiod = lperiod
-        self.send_start = send_start
+        s.drec = false
+        s.crec = false
+        s.origin = origin
+        s.lperiod = lperiod
+        s.send_start = send_start
 
-    def setParams(self, username, caller, callee, h323_cid, sip_cid, remote_ip, \
+    def setParams(s, username, caller, callee, h323_cid, sip_cid, remote_ip, \
       h323_in_cid = nil):
         if caller == nil:
             caller = ''
-        self._attributes.extend((('User-Name', username), ('Calling-Station-Id', caller), \
+        s._attributes.extend((('User-Name', username), ('Calling-Station-Id', caller), \
           ('Called-Station-Id', callee), ('h323-conf-id', h323_cid), ('call-id', sip_cid), \
           ('Acct-Session-Id', sip_cid), ('h323-remote-address', remote_ip)))
         if h323_in_cid != nil and h323_in_cid != h323_cid:
-            self._attributes.append(('h323-incoming-conf-id', h323_in_cid))
-        self.sip_cid = str(sip_cid)
-        self.complete = true
+            s._attributes.append(('h323-incoming-conf-id', h323_in_cid))
+        s.sip_cid = str(sip_cid)
+        s.complete = true
 
-    def conn(self, ua, rtime, origin):
-        if self.crec:
+    def conn(s, ua, rtime, origin):
+        if s.crec:
             return
-        self.crec = true
-        self.iTime = ua.setup_ts
-        self.cTime = ua.connect_ts
-        if ua.remote_ua != nil and self.user_agent == nil:
-            self.user_agent = ua.remote_ua
+        s.crec = true
+        s.iTime = ua.setup_ts
+        s.cTime = ua.connect_ts
+        if ua.remote_ua != nil and s.user_agent == nil:
+            s.user_agent = ua.remote_ua
         if ua.p1xx_ts != nil:
-            self.p1xx_ts = ua.p1xx_ts
+            s.p1xx_ts = ua.p1xx_ts
         if ua.p100_ts != nil:
-            self.p100_ts = ua.p100_ts
-        if self.send_start:
-            self.asend('Start', rtime, origin, ua)
-        self._attributes.extend((('h323-voice-quality', 0), ('Acct-Terminate-Cause', 'User-Request')))
-        if self.lperiod != nil and self.lperiod > 0:
-            self.el = Timeout(self.asend, self.lperiod, -1, 'Alive')
+            s.p100_ts = ua.p100_ts
+        if s.send_start:
+            s.asend('Start', rtime, origin, ua)
+        s._attributes.extend((('h323-voice-quality', 0), ('Acct-Terminate-Cause', 'User-Request')))
+        if s.lperiod != nil and s.lperiod > 0:
+            s.el = Timeout(s.asend, s.lperiod, -1, 'Alive')
 
-    def disc(self, ua, rtime, origin, result = 0):
-        if self.drec:
+    def disc(s, ua, rtime, origin, result = 0):
+        if s.drec:
             return
-        self.drec = true
-        if self.el != nil:
-            self.el.cancel()
-            self.el = nil
-        if self.iTime == nil:
-            self.iTime = ua.setup_ts
-        if self.cTime == nil:
-            self.cTime = rtime
-        if ua.remote_ua != nil and self.user_agent == nil:
-            self.user_agent = ua.remote_ua
+        s.drec = true
+        if s.el != nil:
+            s.el.cancel()
+            s.el = nil
+        if s.iTime == nil:
+            s.iTime = ua.setup_ts
+        if s.cTime == nil:
+            s.cTime = rtime
+        if ua.remote_ua != nil and s.user_agent == nil:
+            s.user_agent = ua.remote_ua
         if ua.p1xx_ts != nil:
-            self.p1xx_ts = ua.p1xx_ts
+            s.p1xx_ts = ua.p1xx_ts
         if ua.p100_ts != nil:
-            self.p100_ts = ua.p100_ts
-        self.asend('Stop', rtime, origin, result, ua)
+            s.p100_ts = ua.p100_ts
+        s.asend('Stop', rtime, origin, result, ua)
 
-    def asend(self, type, rtime = nil, origin = nil, result = 0, ua = nil):
-        if not self.complete:
+    def asend(s, type, rtime = nil, origin = nil, result = 0, ua = nil):
+        if not s.complete:
             return
         if rtime == nil:
             rtime = time()
@@ -128,13 +127,13 @@ class RadiusAccounting(object):
             duration, delay, connected = ua.getAcct()[:3]
         else:
             # Alive accounting
-            duration = rtime - self.cTime
-            delay = self.cTime - self.iTime
+            duration = rtime - s.cTime
+            delay = s.cTime - s.iTime
             connected = true
-        if not(self.ms_precision):
+        if not(s.ms_precision):
             duration = round(duration)
             delay = round(delay)
-        attributes = self._attributes[:]
+        attributes = s._attributes[:]
         if type != 'Start':
             if result >= 400:
                 try:
@@ -145,7 +144,7 @@ class RadiusAccounting(object):
                 dc = '10'
             else:
                 dc = '0'
-            attributes.extend((('h323-disconnect-time', self.ftime(self.iTime + delay + duration)), \
+            attributes.extend((('h323-disconnect-time', s.ftime(s.iTime + delay + duration)), \
               ('Acct-Session-Time', '%d' % round(duration)), ('h323-disconnect-cause', dc)))
         if type == 'Stop':
             if origin == 'caller':
@@ -155,39 +154,39 @@ class RadiusAccounting(object):
             else:
                 release_source = '8'
             attributes.append(('release-source', release_source))
-        attributes.extend((('h323-connect-time', self.ftime(self.iTime + delay)), ('h323-setup-time', self.ftime(self.iTime)), \
+        attributes.extend((('h323-connect-time', s.ftime(s.iTime + delay)), ('h323-setup-time', s.ftime(s.iTime)), \
           ('Acct-Status-Type', type)))
-        if self.user_agent != nil:
-            attributes.append(('h323-ivr-out', 'sip_ua:' + self.user_agent))
-        if self.p1xx_ts != nil:
-            attributes.append(('Acct-Delay-Time', round(self.p1xx_ts)))
-        if self.p100_ts != nil:
-            attributes.append(('provisional-timepoint', self.ftime(self.p100_ts)))
+        if s.user_agent != nil:
+            attributes.append(('h323-ivr-out', 'sip_ua:' + s.user_agent))
+        if s.p1xx_ts != nil:
+            attributes.append(('Acct-Delay-Time', round(s.p1xx_ts)))
+        if s.p100_ts != nil:
+            attributes.append(('provisional-timepoint', s.ftime(s.p100_ts)))
         pattributes = ['%-32s = \'%s\'\n' % (x[0], str(x[1])) for x in attributes]
-        pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, self.origin.capitalize()))
-        self.global_config['_sip_logger'].write(call_id = self.sip_cid, *pattributes)
-        self.global_config['_radius_client'].do_acct(attributes, self._process_result, self.sip_cid, time())
+        pattributes.insert(0, 'sending Acct %s (%s):\n' % (type, s.origin.capitalize()))
+        s.global_config['_sip_logger'].write(call_id = s.sip_cid, *pattributes)
+        s.global_config['_radius_client'].do_acct(attributes, s._process_result, s.sip_cid, time())
 
-    def ftime(self, t):
+    def ftime(s, t):
         gt = gmtime(t)
         day = strftime('%d', gt)
         if day[0] == '0':
             day = day[1]
-        if self.ms_precision:
+        if s.ms_precision:
             msec = (t % 1) * 1000
         else:
             msec = 0
         return strftime('%%H:%%M:%%S.%.3d GMT %%a %%b %s %%Y' % (msec, day), gt)
 
-    def _process_result(self, results, sip_cid, btime):
+    def _process_result(s, results, sip_cid, btime):
         delay = time() - btime
         rcode = results[1]
         if rcode in (0, 1):
             if rcode == 0:
-                message = 'Acct/%s request accepted (delay is %.3f)\n' % (self.origin, delay)
+                message = 'Acct/%s request accepted (delay is %.3f)\n' % (s.origin, delay)
             else:
-                message = 'Acct/%s request rejected (delay is %.3f)\n' % (self.origin, delay)
+                message = 'Acct/%s request rejected (delay is %.3f)\n' % (s.origin, delay)
         else:
-            message = 'Error sending Acct/%s request (delay is %.3f)\n' % (self.origin, delay)
-        self.global_config['_sip_logger'].write(message, call_id = sip_cid)
+            message = 'Error sending Acct/%s request (delay is %.3f)\n' % (s.origin, delay)
+        s.global_config['_sip_logger'].write(message, call_id = sip_cid)
 */

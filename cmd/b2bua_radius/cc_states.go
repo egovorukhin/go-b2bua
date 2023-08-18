@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
 // Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
 //
@@ -29,28 +28,28 @@ package main
 type CCState int
 
 const (
-    CCStateIdle = CCState(iota)
-    CCStateWaitRoute
-    CCStateARComplete
-    CCStateConnected
-    CCStateDead
-    CCStateDisconnecting
+	CCStateIdle = CCState(iota)
+	CCStateWaitRoute
+	CCStateARComplete
+	CCStateConnected
+	CCStateDead
+	CCStateDisconnecting
 )
 
-func (self CCState) String() string {
-    switch self {
-    case CCStateIdle:
-        return "Idle"
-    case CCStateWaitRoute:
-        return "WaitRoute"
-    case CCStateARComplete:
-        return "ARComplete"
-    case CCStateConnected:
-        return "Connected"
-    case CCStateDead:
-        return "Dead"
-    case CCStateDisconnecting:
-        return "Disconnecting"
-    }
-    return "Unknown"
+func (s CCState) String() string {
+	switch s {
+	case CCStateIdle:
+		return "Idle"
+	case CCStateWaitRoute:
+		return "WaitRoute"
+	case CCStateARComplete:
+		return "ARComplete"
+	case CCStateConnected:
+		return "Connected"
+	case CCStateDead:
+		return "Dead"
+	case CCStateDisconnecting:
+		return "Disconnecting"
+	}
+	return "Unknown"
 }

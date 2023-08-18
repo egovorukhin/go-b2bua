@@ -26,87 +26,87 @@
 package sippy
 
 import (
-    "github.com/sippy/go-b2bua/sippy/conf"
-    "github.com/sippy/go-b2bua/sippy/types"
+	"github.com/sippy/go-b2bua/sippy/conf"
+	"github.com/sippy/go-b2bua/sippy/types"
 )
 
 type UasStateRingingRel struct {
-    *UasStateRinging
-    prack_received      bool
-    prack_wait          bool
-    pending_ev_ring     sippy_types.CCEvent
-    pending_ev_connect  *CCEventConnect
-    pending_ev_update   *CCEventUpdate
+	*UasStateRinging
+	prack_received     bool
+	prack_wait         bool
+	pending_ev_ring    sippy_types.CCEvent
+	pending_ev_connect *CCEventConnect
+	pending_ev_update  *CCEventUpdate
 }
 
 func NewUasStateRingingRel(ua sippy_types.UA, config sippy_conf.Config) *UasStateRingingRel {
-    self := &UasStateRingingRel{
-        UasStateRinging : NewUasStateRinging(ua, config),
-        prack_wait      : false,
-    }
-    if ua.GetLSDP() != nil {
-        self.prack_wait = true
-    }
-    return self
+	s := &UasStateRingingRel{
+		UasStateRinging: NewUasStateRinging(ua, config),
+		prack_wait:      false,
+	}
+	if ua.GetLSDP() != nil {
+		s.prack_wait = true
+	}
+	return s
 }
 
-func (self *UasStateRingingRel) RecvEvent(_event sippy_types.CCEvent) (sippy_types.UaState, func(), error) {
-    switch event := _event.(type) {
-    case *CCEventRing:
-        if ! self.prack_received {
-            // There is no PRACK for the previous response yet.
-            if event.scode > 100 {
-                // Memorize the last event
-                self.pending_ev_ring = _event
-            }
-            return nil, nil, nil
-        } else {
-            self.prack_wait = event.body != nil
-            self.prack_received = false
-        }
-    case *CCEventConnect:
-        if self.prack_wait && ! self.prack_received {
-            // 200 OK received but the last reliable provisional
-            // response has not yet been aknowledged. Memorize the event
-            // until PRACK is received.
-            self.pending_ev_connect = event
-            return nil, nil, nil
-        }
-    case *CCEventUpdate:
-        // 200 OK's been received and re-INVITE has arrived but the last
-        // reliable provisional response is still not aknowledged.
-        // Memorize the event until PRACK is received.
-        self.pending_ev_update = event
-        return nil, nil, nil
-    }
-    return self.UasStateRinging.RecvEvent(_event)
+func (s *UasStateRingingRel) RecvEvent(_event sippy_types.CCEvent) (sippy_types.UaState, func(), error) {
+	switch event := _event.(type) {
+	case *CCEventRing:
+		if !s.prack_received {
+			// There is no PRACK for the previous response yet.
+			if event.scode > 100 {
+				// Memorize the last event
+				s.pending_ev_ring = _event
+			}
+			return nil, nil, nil
+		} else {
+			s.prack_wait = event.body != nil
+			s.prack_received = false
+		}
+	case *CCEventConnect:
+		if s.prack_wait && !s.prack_received {
+			// 200 OK received but the last reliable provisional
+			// response has not yet been aknowledged. Memorize the event
+			// until PRACK is received.
+			s.pending_ev_connect = event
+			return nil, nil, nil
+		}
+	case *CCEventUpdate:
+		// 200 OK's been received and re-INVITE has arrived but the last
+		// reliable provisional response is still not aknowledged.
+		// Memorize the event until PRACK is received.
+		s.pending_ev_update = event
+		return nil, nil, nil
+	}
+	return s.UasStateRinging.RecvEvent(_event)
 }
 
-func (self *UasStateRingingRel) RecvPRACK(req sippy_types.SipRequest, resp sippy_types.SipResponse) {
-    var state sippy_types.UaState
-    var cb func()
-    var err error
+func (s *UasStateRingingRel) RecvPRACK(req sippy_types.SipRequest, resp sippy_types.SipResponse) {
+	var state sippy_types.UaState
+	var cb func()
+	var err error
 
-    self.prack_received = true
-    if self.pending_ev_connect != nil {
-        state, cb, err = self.RecvEvent(self.pending_ev_connect)
-    } else if self.pending_ev_ring != nil {
-        state, cb, err = self.RecvEvent(self.pending_ev_ring)
-    }
-    if err != nil {
-        self.config.ErrorLogger().Error("RecvPRACK: " + err.Error())
-    }
-    if state != nil {
-        self.ua.ChangeState(state, cb)
-    }
-    if self.pending_ev_update != nil {
-        self.ua.RecvEvent(self.pending_ev_update)
-    }
-    self.pending_ev_ring = nil
-    self.pending_ev_connect = nil
-    self.pending_ev_update = nil
-    body := req.GetBody()
-    if body != nil {
-        self.ua.SetRSDP(body.GetCopy())
-    }
+	s.prack_received = true
+	if s.pending_ev_connect != nil {
+		state, cb, err = s.RecvEvent(s.pending_ev_connect)
+	} else if s.pending_ev_ring != nil {
+		state, cb, err = s.RecvEvent(s.pending_ev_ring)
+	}
+	if err != nil {
+		s.config.ErrorLogger().Error("RecvPRACK: " + err.Error())
+	}
+	if state != nil {
+		s.ua.ChangeState(state, cb)
+	}
+	if s.pending_ev_update != nil {
+		s.ua.RecvEvent(s.pending_ev_update)
+	}
+	s.pending_ev_ring = nil
+	s.pending_ev_connect = nil
+	s.pending_ev_update = nil
+	body := req.GetBody()
+	if body != nil {
+		s.ua.SetRSDP(body.GetCopy())
+	}
 }
