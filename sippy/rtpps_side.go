@@ -6,9 +6,9 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/sdp"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/sdp"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type _rtpps_side struct {
@@ -58,7 +58,7 @@ func (s *_rtpps_side) update(remote_ip string, remote_port string, result_callba
 	if sbind_supported {
 		if s.raddress != nil {
 			//if s.owner.IsLocal() && atype == "IP4" {
-			//    options += "L" + s.laddress
+			//    options += "L" + s.lAddress
 			//} else if ! s.owner.IsLocal() {
 			//    options += "R" + s.raddress.Host.String()
 			//}

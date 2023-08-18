@@ -18,20 +18,20 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
-type write_req struct {
-	address     net.Addr
-	data        []byte
-	on_complete func()
+type writeReq struct {
+	address    net.Addr
+	data       []byte
+	onComplete func()
 }
 
-type resolv_req struct {
+type resolvReq struct {
 	hostPort *sippy_net.HostPort
 	data     []byte
 }
@@ -51,7 +51,7 @@ func NewAsyncResolver(userv *UdpServer, logger sippy_log.ErrorLogger) *asyncReso
 }
 
 func (s *asyncResolver) run(userv *UdpServer) {
-	var wi *resolv_req
+	var wi *resolvReq
 LOOP:
 	for {
 		wi = <-userv.wi_resolv
@@ -88,7 +88,7 @@ func NewAsyncSender(userv *UdpServer, n int) *asyncSender {
 }
 
 func (s *asyncSender) run(userv *UdpServer) {
-	var wi *write_req
+	var wi *writeReq
 LOOP:
 	for {
 		wi = <-userv.wi
@@ -99,8 +99,8 @@ LOOP:
 	SEND_LOOP:
 		for i := 0; i < 20; i++ {
 			if _, err := userv.skt.WriteTo(wi.data, wi.address); err == nil {
-				if wi.on_complete != nil {
-					wi.on_complete()
+				if wi.onComplete != nil {
+					wi.onComplete()
 				}
 				break SEND_LOOP
 			}
@@ -138,7 +138,7 @@ func (s *asyncReceiver) run(userv *UdpServer) {
 		}
 		msg := make([]byte, 0, n)
 		msg = append(msg, buf[:n]...)
-		sippy_utils.SafeCall(func() { userv.handle_read(msg, address, rtime) }, nil, s.logger)
+		sippy_utils.SafeCall(func() { userv.handleRead(msg, address, rtime) }, nil, s.logger)
 	}
 	s.sem <- 1
 }
@@ -161,8 +161,8 @@ func NewUdpServerOpts(laddress *sippy_net.HostPort, data_callback sippy_net.Data
 type UdpServer struct {
 	uopts          udpServerOpts
 	skt            net.PacketConn
-	wi             chan *write_req
-	wi_resolv      chan *resolv_req
+	wi             chan *writeReq
+	wi_resolv      chan *resolvReq
 	asenders       []*asyncSender
 	areceivers     []*asyncReceiver
 	aresolvers     []*asyncResolver
@@ -244,51 +244,51 @@ func NewUdpServer(config sippy_conf.Config, uopts *udpServerOpts) (*UdpServer, e
 	if err != nil {
 		return nil, err
 	}
-	s := &UdpServer{
+	u := &UdpServer{
 		uopts:      *uopts,
 		skt:        skt,
-		wi:         make(chan *write_req, 1000),
-		wi_resolv:  make(chan *resolv_req, 1000),
+		wi:         make(chan *writeReq, 1000),
+		wi_resolv:  make(chan *resolvReq, 1000),
 		asenders:   make([]*asyncSender, 0, uopts.nworkers),
 		areceivers: make([]*asyncReceiver, 0, uopts.nworkers),
 		aresolvers: make([]*asyncResolver, 0, uopts.nworkers),
 	}
 	for n := 0; n < uopts.nworkers; n++ {
-		s.asenders = append(s.asenders, NewAsyncSender(s, n))
-		s.areceivers = append(s.areceivers, NewAsyncReciever(s, config.ErrorLogger()))
+		u.asenders = append(u.asenders, NewAsyncSender(u, n))
+		u.areceivers = append(u.areceivers, NewAsyncReciever(u, config.ErrorLogger()))
 	}
 	for n := 0; n < uopts.nworkers; n++ {
-		s.aresolvers = append(s.aresolvers, NewAsyncResolver(s, config.ErrorLogger()))
+		u.aresolvers = append(u.aresolvers, NewAsyncResolver(u, config.ErrorLogger()))
 	}
-	return s, nil
+	return u, nil
 }
 
 func (s *UdpServer) SendTo(data []byte, hostPort *sippy_net.HostPort) {
 	s.SendToWithCb(data, hostPort, nil)
 }
 
-func (s *UdpServer) SendToWithCb(data []byte, hostPort *sippy_net.HostPort, on_complete func()) {
+func (s *UdpServer) SendToWithCb(data []byte, hostPort *sippy_net.HostPort, onComplete func()) {
 	ip := hostPort.ParseIP()
 	if ip == nil {
-		s.wi_resolv <- &resolv_req{data: data, hostPort: hostPort}
+		s.wi_resolv <- &resolvReq{data: data, hostPort: hostPort}
 		return
 	}
 	address, err := net.ResolveUDPAddr("udp", hostPort.String()) // in fact no resolving is done here
 	if err != nil {
 		return // not reached
 	}
-	s._send_to(data, address, on_complete)
+	s._send_to(data, address, onComplete)
 }
 
-func (s *UdpServer) _send_to(data []byte, address net.Addr, on_complete func()) {
-	s.wi <- &write_req{
-		data:        data,
-		address:     address,
-		on_complete: on_complete,
+func (s *UdpServer) _send_to(data []byte, address net.Addr, onComplete func()) {
+	s.wi <- &writeReq{
+		data:       data,
+		address:    address,
+		onComplete: onComplete,
 	}
 }
 
-func (s *UdpServer) handle_read(data []byte, address net.Addr, rtime *sippy_time.MonoTime) {
+func (s *UdpServer) handleRead(data []byte, address net.Addr, rtime *sippy_time.MonoTime) {
 	if len(data) > 0 {
 		s.packets_recvd++
 		host, port, _ := net.SplitHostPort(address.String())

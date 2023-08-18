@@ -1,7 +1,7 @@
 package sippy_types
 
 import (
-	"github.com/sippy/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
 )
 
 type UaContext struct {

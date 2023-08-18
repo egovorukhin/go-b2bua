@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/math"
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/types"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/math"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 const (
@@ -47,26 +47,26 @@ func (s *_RTPPLWorker) send_raw(command string, stime *sippy_time.MonoTime) (str
 	retries := 0
 	rval := ""
 	buf := make([]byte, 1024)
-	var s net.Conn
+	var conn net.Conn
 	for {
 		if retries > _RTPPLWorker_MAX_RETRIES {
 			return "", 0, fmt.Errorf("Error sending to the rtpproxy on " + s.userv._address.String() + ": " + err.Error())
 		}
 		retries++
-		if s != nil {
-			s.Close()
+		if conn != nil {
+			conn.Close()
 		}
-		s, err = net.Dial(s.userv._address.Network(), s.userv._address.String())
+		conn, err = net.Dial(s.userv._address.Network(), s.userv._address.String())
 		if err != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		_, err = s.Write([]byte(command))
+		_, err = conn.Write([]byte(command))
 		if err != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		n, err = s.Read(buf)
+		n, err = conn.Read(buf)
 		if err != nil {
 			time.Sleep(100 * time.Millisecond)
 			continue
@@ -74,9 +74,9 @@ func (s *_RTPPLWorker) send_raw(command string, stime *sippy_time.MonoTime) (str
 		rval = strings.TrimSpace(string(buf[:n]))
 		break
 	}
-	s.Close()
-	rtpc_delay, _ := stime.OffsetFromNow()
-	return rval, rtpc_delay, nil
+	_ = conn.Close()
+	rtpcDelay, _ := stime.OffsetFromNow()
+	return rval, rtpcDelay, nil
 }
 
 func (s *_RTPPLWorker) run() {

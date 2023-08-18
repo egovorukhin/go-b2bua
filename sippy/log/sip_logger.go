@@ -1,7 +1,7 @@
 package sippy_log
 
 import (
-	"github.com/sippy/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
 	"os"
 	"strconv"
 	"syscall"
@@ -9,7 +9,7 @@ import (
 )
 
 type SipLogger interface {
-	Write(rtime *sippy_time.MonoTime, call_id string, msg string)
+	Write(rtime *sippy_time.MonoTime, callId string, msg string)
 }
 
 type sipLogger struct {
@@ -18,7 +18,7 @@ type sipLogger struct {
 	fd    *os.File
 }
 
-func NewSipLogger(id, fname string) (*sipLogger, error) {
+func NewSipLogger(id, fname string) (SipLogger, error) {
 	s := &sipLogger{
 		fname: fname,
 		id:    id,

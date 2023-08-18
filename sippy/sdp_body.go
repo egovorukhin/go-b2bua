@@ -4,37 +4,37 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/sdp"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/sdp"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type sdpBody struct {
-	sections  []*sippy_sdp.SdpMediaDescription
-	v_header  *sippy_sdp.SdpGeneric
-	o_header  *sippy_sdp.SdpOrigin
-	s_header  *sippy_sdp.SdpGeneric
-	i_header  *sippy_sdp.SdpGeneric
-	u_header  *sippy_sdp.SdpGeneric
-	e_header  *sippy_sdp.SdpGeneric
-	p_header  *sippy_sdp.SdpGeneric
-	b_header  *sippy_sdp.SdpGeneric
-	t_header  *sippy_sdp.SdpGeneric
-	r_header  *sippy_sdp.SdpGeneric
-	z_header  *sippy_sdp.SdpGeneric
-	k_header  *sippy_sdp.SdpGeneric
-	a_headers []string
-	c_header  *sippy_sdp.SdpConnecton
+	sections []*sippy_sdp.SdpMediaDescription
+	vHeader  *sippy_sdp.SdpGeneric
+	oHeader  *sippy_sdp.SdpOrigin
+	sHeader  *sippy_sdp.SdpGeneric
+	iHeader  *sippy_sdp.SdpGeneric
+	uHeader  *sippy_sdp.SdpGeneric
+	eHeader  *sippy_sdp.SdpGeneric
+	pHeader  *sippy_sdp.SdpGeneric
+	bHeader  *sippy_sdp.SdpGeneric
+	tHeader  *sippy_sdp.SdpGeneric
+	rHeader  *sippy_sdp.SdpGeneric
+	zHeader  *sippy_sdp.SdpGeneric
+	kHeader  *sippy_sdp.SdpGeneric
+	aHeaders []string
+	cHeader  *sippy_sdp.SdpConnecton
 }
 
 func ParseSdpBody(body string) (*sdpBody, error) {
 	var err error
 	s := &sdpBody{
-		a_headers: make([]string, 0),
-		sections:  make([]*sippy_sdp.SdpMediaDescription, 0),
+		aHeaders: make([]string, 0),
+		sections: make([]*sippy_sdp.SdpMediaDescription, 0),
 	}
-	current_snum := 0
-	var c_header *sippy_sdp.SdpConnecton
+	currentSnum := 0
+	var cHeader *sippy_sdp.SdpConnecton
 	for _, line := range strings.FieldsFunc(strings.TrimSpace(body), func(c rune) bool { return c == '\n' || c == '\r' }) {
 		line = strings.TrimSpace(line)
 		if line == "" {
@@ -46,68 +46,68 @@ func ParseSdpBody(body string) (*sdpBody, error) {
 		}
 		name, v := strings.ToLower(arr[0]), arr[1]
 		if name == "m" {
-			current_snum += 1
+			currentSnum += 1
 			s.sections = append(s.sections, sippy_sdp.NewSdpMediaDescription())
 		}
-		if current_snum == 0 {
+		if currentSnum == 0 {
 			if name == "c" {
-				c_header = sippy_sdp.ParseSdpConnecton(v)
+				cHeader = sippy_sdp.ParseSdpConnecton(v)
 			} else if name == "a" {
-				s.a_headers = append(s.a_headers, v)
+				s.aHeaders = append(s.aHeaders, v)
 			} else {
 				switch name {
 				case "v":
-					s.v_header = sippy_sdp.ParseSdpGeneric(v)
+					s.vHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "o":
-					s.o_header, err = sippy_sdp.ParseSdpOrigin(v)
+					s.oHeader, err = sippy_sdp.ParseSdpOrigin(v)
 					if err != nil {
 						return nil, err
 					}
 				case "s":
-					s.s_header = sippy_sdp.ParseSdpGeneric(v)
+					s.sHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "i":
-					s.i_header = sippy_sdp.ParseSdpGeneric(v)
+					s.iHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "u":
-					s.u_header = sippy_sdp.ParseSdpGeneric(v)
+					s.uHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "e":
-					s.e_header = sippy_sdp.ParseSdpGeneric(v)
+					s.eHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "p":
-					s.p_header = sippy_sdp.ParseSdpGeneric(v)
+					s.pHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "b":
-					s.b_header = sippy_sdp.ParseSdpGeneric(v)
+					s.bHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "t":
-					s.t_header = sippy_sdp.ParseSdpGeneric(v)
+					s.tHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "r":
-					s.r_header = sippy_sdp.ParseSdpGeneric(v)
+					s.rHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "z":
-					s.z_header = sippy_sdp.ParseSdpGeneric(v)
+					s.zHeader = sippy_sdp.ParseSdpGeneric(v)
 				case "k":
-					s.k_header = sippy_sdp.ParseSdpGeneric(v)
+					s.kHeader = sippy_sdp.ParseSdpGeneric(v)
 				}
 			}
 		} else {
 			s.sections[len(s.sections)-1].AddHeader(name, v)
 		}
 	}
-	if c_header != nil {
+	if cHeader != nil {
 		for _, section := range s.sections {
 			if section.GetCHeader() == nil {
-				section.SetCHeader(c_header)
+				section.SetCHeader(cHeader)
 			}
 		}
 		if len(s.sections) == 0 {
-			s.c_header = c_header
+			s.cHeader = cHeader
 		}
 	}
 	// Do some sanity checking, RFC4566
 	switch {
-	case s.v_header == nil:
+	case s.vHeader == nil:
 		return nil, fmt.Errorf("Mandatory \"v=\" SDP header is missing")
-	case s.o_header == nil:
+	case s.oHeader == nil:
 		return nil, fmt.Errorf("Mandatory \"o=\" SDP header is missing")
-	case s.s_header == nil:
+	case s.sHeader == nil:
 		return nil, fmt.Errorf("Mandatory \"s=\" SDP header is missing")
-	case s.t_header == nil:
+	case s.tHeader == nil:
 		return nil, fmt.Errorf("Mandatory \"t=\" SDP header is missing")
 	}
 	for _, sect := range s.sections {
@@ -118,107 +118,106 @@ func ParseSdpBody(body string) (*sdpBody, error) {
 	return s, nil
 }
 
-func (s *sdpBody) first_half() []*sippy_sdp.Sdp_header_and_name {
-	ret := []*sippy_sdp.Sdp_header_and_name{}
-	if s.v_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"v", s.v_header})
+func (s *sdpBody) firstHalf() []*sippy_sdp.SdpHeaderAndName {
+	var ret []*sippy_sdp.SdpHeaderAndName
+	if s.vHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"v", s.vHeader})
 	}
-	if s.o_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"o", s.o_header})
+	if s.oHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"o", s.oHeader})
 	}
-	if s.s_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"s", s.s_header})
+	if s.sHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"s", s.sHeader})
 	}
-	if s.i_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"i", s.i_header})
+	if s.iHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"i", s.iHeader})
 	}
-	if s.u_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"u", s.u_header})
+	if s.uHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"u", s.uHeader})
 	}
-	if s.e_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"e", s.e_header})
+	if s.eHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"e", s.eHeader})
 	}
-	if s.p_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"p", s.p_header})
-	}
-	return ret
-}
-
-func (s *sdpBody) second_half() []*sippy_sdp.Sdp_header_and_name {
-	ret := []*sippy_sdp.Sdp_header_and_name{}
-	if s.b_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"b", s.b_header})
-	}
-	if s.t_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"t", s.t_header})
-	}
-	if s.r_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"r", s.r_header})
-	}
-	if s.z_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"z", s.z_header})
-	}
-	if s.k_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"k", s.k_header})
+	if s.pHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"p", s.pHeader})
 	}
 	return ret
 }
 
-func (s *sdpBody) all_headers() []*sippy_sdp.Sdp_header_and_name {
-	ret := s.first_half()
-	if s.c_header != nil {
-		ret = append(ret, &sippy_sdp.Sdp_header_and_name{"c", s.c_header})
+func (s *sdpBody) secondHalf() []*sippy_sdp.SdpHeaderAndName {
+	var ret []*sippy_sdp.SdpHeaderAndName
+	if s.bHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"b", s.bHeader})
 	}
-	return append(ret, s.second_half()...)
+	if s.tHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"t", s.tHeader})
+	}
+	if s.rHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"r", s.rHeader})
+	}
+	if s.zHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"z", s.zHeader})
+	}
+	if s.kHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"k", s.kHeader})
+	}
+	return ret
 }
 
-func (s *sdpBody) String() string {
-	s := ""
-	if len(s.sections) == 1 && s.sections[0].GetCHeader() != nil {
-		for _, it := range s.first_half() {
+func (s *sdpBody) allHeaders() []*sippy_sdp.SdpHeaderAndName {
+	ret := s.firstHalf()
+	if s.cHeader != nil {
+		ret = append(ret, &sippy_sdp.SdpHeaderAndName{"c", s.cHeader})
+	}
+	return append(ret, s.secondHalf()...)
+}
+
+func (b *sdpBody) String() (s string) {
+	if len(b.sections) == 1 && b.sections[0].GetCHeader() != nil {
+		for _, it := range b.firstHalf() {
 			s += it.Name + "=" + it.Header.String() + "\r\n"
 		}
-		s += "c=" + s.sections[0].GetCHeader().String() + "\r\n"
-		for _, it := range s.second_half() {
+		s += "c=" + b.sections[0].GetCHeader().String() + "\r\n"
+		for _, it := range b.secondHalf() {
 			s += it.Name + "=" + it.Header.String() + "\r\n"
 		}
-		for _, header := range s.a_headers {
+		for _, header := range b.aHeaders {
 			s += "a=" + header + "\r\n"
 		}
-		s += s.sections[0].LocalStr(nil, true /* noC */)
+		s += b.sections[0].LocalStr(nil, true /* noC */)
 		return s
 	}
 	// Special code to optimize for the cases when there are many media streams pointing to
 	// the same IP. Only include c= header into the top section of the SDP and remove it from
 	// the streams that match.
-	optimize_c_headers := false
-	sections_0_str := ""
-	if len(s.sections) > 1 && s.c_header == nil && s.sections[0].GetCHeader() != nil &&
-		s.sections[0].GetCHeader().String() == s.sections[1].GetCHeader().String() {
+	optimizeCHeaders := false
+	sections0Str := ""
+	if len(b.sections) > 1 && b.cHeader == nil && b.sections[0].GetCHeader() != nil &&
+		b.sections[0].GetCHeader().String() == b.sections[1].GetCHeader().String() {
 		// Special code to optimize for the cases when there are many media streams pointing to
 		// the same IP. Only include c= header into the top section of the SDP and remove it from
 		// the streams that match.
-		optimize_c_headers = true
-		sections_0_str = s.sections[0].GetCHeader().String()
+		optimizeCHeaders = true
+		sections0Str = b.sections[0].GetCHeader().String()
 	}
-	if optimize_c_headers {
-		for _, it := range s.first_half() {
+	if optimizeCHeaders {
+		for _, it := range b.firstHalf() {
 			s += it.Name + "=" + it.Header.String() + "\r\n"
 		}
-		s += "c=" + sections_0_str + "\r\n"
-		for _, it := range s.second_half() {
+		s += "c=" + sections0Str + "\r\n"
+		for _, it := range b.secondHalf() {
 			s += it.Name + "=" + it.Header.String() + "\r\n"
 		}
 	} else {
-		for _, it := range s.all_headers() {
+		for _, it := range b.allHeaders() {
 			s += it.Name + "=" + it.Header.String() + "\r\n"
 		}
 	}
-	for _, header := range s.a_headers {
+	for _, header := range b.aHeaders {
 		s += "a=" + header + "\r\n"
 	}
-	for _, section := range s.sections {
-		if optimize_c_headers && section.GetCHeader() != nil && section.GetCHeader().String() == sections_0_str {
+	for _, section := range b.sections {
+		if optimizeCHeaders && section.GetCHeader() != nil && section.GetCHeader().String() == sections0Str {
 			s += section.LocalStr(nil, true /* noC */)
 		} else {
 			s += section.String()
@@ -227,54 +226,53 @@ func (s *sdpBody) String() string {
 	return s
 }
 
-func (s *sdpBody) LocalStr(hostPort *sippy_net.HostPort) string {
-	s := ""
-	if len(s.sections) == 1 && s.sections[0].GetCHeader() != nil {
-		for _, it := range s.first_half() {
+func (b *sdpBody) LocalStr(hostPort *sippy_net.HostPort) (s string) {
+	if len(b.sections) == 1 && b.sections[0].GetCHeader() != nil {
+		for _, it := range b.firstHalf() {
 			s += it.Name + "=" + it.Header.LocalStr(hostPort) + "\r\n"
 		}
-		s += "c=" + s.sections[0].GetCHeader().String() + "\r\n"
-		for _, it := range s.second_half() {
+		s += "c=" + b.sections[0].GetCHeader().String() + "\r\n"
+		for _, it := range b.secondHalf() {
 			s += it.Name + "=" + it.Header.LocalStr(hostPort) + "\r\n"
 		}
-		for _, header := range s.a_headers {
+		for _, header := range b.aHeaders {
 			s += "a=" + header + "\r\n"
 		}
-		s += s.sections[0].LocalStr(hostPort, true /* noC */)
+		s += b.sections[0].LocalStr(hostPort, true /* noC */)
 		return s
 	}
 	// Special code to optimize for the cases when there are many media streams pointing to
 	// the same IP. Only include c= header into the top section of the SDP and remove it from
 	// the streams that match.
-	optimize_c_headers := false
-	sections_0_str := ""
-	if len(s.sections) > 1 && s.c_header == nil && s.sections[0].GetCHeader() != nil &&
-		s.sections[0].GetCHeader().String() == s.sections[1].GetCHeader().String() {
+	optimizeCHeaders := false
+	sections0Str := ""
+	if len(b.sections) > 1 && b.cHeader == nil && b.sections[0].GetCHeader() != nil &&
+		b.sections[0].GetCHeader().String() == b.sections[1].GetCHeader().String() {
 		// Special code to optimize for the cases when there are many media streams pointing to
 		// the same IP. Only include c= header into the top section of the SDP and remove it from
 		// the streams that match.
-		optimize_c_headers = true
-		sections_0_str = s.sections[0].GetCHeader().String()
+		optimizeCHeaders = true
+		sections0Str = b.sections[0].GetCHeader().String()
 	}
-	if optimize_c_headers {
-		for _, it := range s.first_half() {
+	if optimizeCHeaders {
+		for _, it := range b.firstHalf() {
 			s += it.Name + "=" + it.Header.LocalStr(hostPort) + "\r\n"
 		}
-		s += "c=" + sections_0_str + "\r\n"
-		for _, it := range s.second_half() {
+		s += "c=" + sections0Str + "\r\n"
+		for _, it := range b.secondHalf() {
 			s += it.Name + "=" + it.Header.LocalStr(hostPort) + "\r\n"
 		}
 	} else {
-		for _, it := range s.all_headers() {
+		for _, it := range b.allHeaders() {
 			s += it.Name + "=" + it.Header.LocalStr(hostPort) + "\r\n"
 		}
 	}
-	for _, header := range s.a_headers {
+	for _, header := range b.aHeaders {
 		s += "a=" + header + "\r\n"
 	}
-	for _, section := range s.sections {
-		if optimize_c_headers && section.GetCHeader() != nil &&
-			section.GetCHeader().String() == sections_0_str {
+	for _, section := range b.sections {
+		if optimizeCHeaders && section.GetCHeader() != nil &&
+			section.GetCHeader().String() == sections0Str {
 			s += section.LocalStr(hostPort /*noC =*/, true)
 		} else {
 			s += section.LocalStr(hostPort /*noC =*/, false)
@@ -288,29 +286,29 @@ func (s *sdpBody) GetCopy() sippy_types.Sdp {
 	for i, s := range s.sections {
 		sections[i] = s.GetCopy()
 	}
-	a_headers := make([]string, len(s.a_headers))
-	copy(a_headers, s.a_headers)
+	a_headers := make([]string, len(s.aHeaders))
+	copy(a_headers, s.aHeaders)
 	return &sdpBody{
-		sections:  sections,
-		v_header:  s.v_header.GetCopy(),
-		o_header:  s.o_header.GetCopy(),
-		s_header:  s.s_header.GetCopy(),
-		i_header:  s.i_header.GetCopy(),
-		u_header:  s.u_header.GetCopy(),
-		e_header:  s.e_header.GetCopy(),
-		p_header:  s.p_header.GetCopy(),
-		b_header:  s.b_header.GetCopy(),
-		t_header:  s.t_header.GetCopy(),
-		r_header:  s.r_header.GetCopy(),
-		z_header:  s.z_header.GetCopy(),
-		k_header:  s.k_header.GetCopy(),
-		a_headers: a_headers,
-		c_header:  s.c_header.GetCopy(),
+		sections: sections,
+		vHeader:  s.vHeader.GetCopy(),
+		oHeader:  s.oHeader.GetCopy(),
+		sHeader:  s.sHeader.GetCopy(),
+		iHeader:  s.iHeader.GetCopy(),
+		uHeader:  s.uHeader.GetCopy(),
+		eHeader:  s.eHeader.GetCopy(),
+		pHeader:  s.pHeader.GetCopy(),
+		bHeader:  s.bHeader.GetCopy(),
+		tHeader:  s.tHeader.GetCopy(),
+		rHeader:  s.rHeader.GetCopy(),
+		zHeader:  s.zHeader.GetCopy(),
+		kHeader:  s.kHeader.GetCopy(),
+		aHeaders: a_headers,
+		cHeader:  s.cHeader.GetCopy(),
 	}
 }
 
 func (s *sdpBody) GetCHeader() *sippy_sdp.SdpConnecton {
-	return s.c_header
+	return s.cHeader
 }
 
 func (s *sdpBody) SetCHeaderAddr(addr string) {
@@ -335,13 +333,13 @@ func (s *sdpBody) RemoveSection(idx int) {
 }
 
 func (s *sdpBody) GetOHeader() *sippy_sdp.SdpOrigin {
-	return s.o_header
+	return s.oHeader
 }
 
 func (s *sdpBody) SetOHeader(o_header *sippy_sdp.SdpOrigin) {
-	s.o_header = o_header
+	s.oHeader = o_header
 }
 
 func (s *sdpBody) AppendAHeader(hdr string) {
-	s.a_headers = append(s.a_headers, hdr)
+	s.aHeaders = append(s.aHeaders, hdr)
 }

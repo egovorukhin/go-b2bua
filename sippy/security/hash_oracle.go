@@ -32,7 +32,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 const (

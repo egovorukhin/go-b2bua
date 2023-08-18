@@ -1,8 +1,8 @@
 package sippy
 
 import (
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type UaStateFailed struct {

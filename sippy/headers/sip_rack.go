@@ -4,8 +4,8 @@ import (
 	"errors"
 	"strconv"
 
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 type SipRAckBody struct {

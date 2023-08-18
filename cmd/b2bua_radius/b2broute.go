@@ -1,28 +1,3 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-// Copyright (c) 2006-2016 Sippy Software, Inc. All rights reserved.
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package main
 
 import (
@@ -33,10 +8,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy"
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/headers"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type ainfo_item struct {
@@ -89,7 +64,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 	var hostPort []string
 	var err error
 
-	s := &B2BRoute{
+	r := &B2BRoute{
 		huntstop_scodes: []int{},
 		cld_set:         false,
 		crt_set:         false,
@@ -101,20 +76,20 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 	route := strings.Split(sroute, ";")
 	if strings.IndexRune(route[0], '@') != -1 {
 		tmp := strings.SplitN(route[0], "@", 2)
-		s.cld, s.hostPort = tmp[0], tmp[1]
+		r.cld, r.hostPort = tmp[0], tmp[1]
 		// Allow CLD to be forcefully removed by sending `Routing:@host" entry,
 		// as opposed to the Routing:host, which means that CLD should be obtained
 		// from the incoming call leg.
-		s.cld_set = true
+		r.cld_set = true
 	} else {
-		s.hostPort = route[0]
+		r.hostPort = route[0]
 	}
 	ipv6only := false
-	if s.hostPort[0] != '[' {
-		hostPort = strings.SplitN(s.hostPort, ":", 2)
-		s.hostonly = hostPort[0]
+	if r.hostPort[0] != '[' {
+		hostPort = strings.SplitN(r.hostPort, ":", 2)
+		r.hostonly = hostPort[0]
 	} else {
-		hostPort = strings.SplitN(s.hostPort[1:], "]", 2)
+		hostPort = strings.SplitN(r.hostPort[1:], "]", 2)
 		if len(hostPort) > 1 {
 			if hostPort[1] == "" {
 				hostPort = hostPort[:1]
@@ -123,7 +98,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 			}
 		}
 		ipv6only = true
-		s.hostonly = "[" + hostPort[0] + "]"
+		r.hostonly = "[" + hostPort[0] + "]"
 	}
 	var port *sippy_net.MyPort
 	if len(hostPort) == 1 {
@@ -131,7 +106,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 	} else {
 		port = sippy_net.NewMyPort(hostPort[1])
 	}
-	s.ainfo = make([]*ainfo_item, 0)
+	r.ainfo = make([]*ainfo_item, 0)
 	ips, err := net.LookupIP(hostPort[0])
 	if err != nil {
 		return nil, errors.New("NewB2BRoute: error resolving host IP '" + hostPort[0] + "': " + err.Error())
@@ -140,7 +115,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 		if ipv6only && sippy_net.IsIP4(ip) {
 			continue
 		}
-		s.ainfo = append(s.ainfo, &ainfo_item{ip, port.String()})
+		r.ainfo = append(r.ainfo, &ainfo_item{ip, port.String()})
 	}
 	//s.params = []string{}
 	for _, x := range route[1:] {
@@ -154,8 +129,8 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 			if v < 0 {
 				v = 0
 			}
-			s.credit_time = time.Duration(v * int(time.Second))
-			s.crt_set = true
+			r.credit_time = time.Duration(v * int(time.Second))
+			r.crt_set = true
 		case "expires":
 			v, err := strconv.Atoi(av[1])
 			if err != nil {
@@ -164,7 +139,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 			if v < 0 {
 				v = 0
 			}
-			s.expires = time.Duration(v * int(time.Second))
+			r.expires = time.Duration(v * int(time.Second))
 		case "hs_scodes":
 			for _, s := range strings.Split(av[1], ",") {
 				s = strings.TrimSpace(s)
@@ -175,7 +150,7 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 				if err != nil {
 					return nil, errors.New("Error parsing hs_scodes '" + s + "': " + err.Error())
 				}
-				s.huntstop_scodes = append(s.huntstop_scodes, scode)
+				r.huntstop_scodes = append(r.huntstop_scodes, scode)
 			}
 		case "np_expires":
 			v, err := strconv.Atoi(av[1])
@@ -185,20 +160,20 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 			if v < 0 {
 				v = 0
 			}
-			s.no_progress_expires = time.Duration(v * int(time.Second))
+			r.no_progress_expires = time.Duration(v * int(time.Second))
 		case "forward_on_fail":
-			s.forward_on_fail = true
+			r.forward_on_fail = true
 		case "auth":
 			tmp := strings.SplitN(av[1], ":", 2)
 			if len(tmp) != 2 {
 				return nil, errors.New("Error parsing the auth (no colon) '" + av[1] + "': " + err.Error())
 			}
-			s.user, s.passw = tmp[0], tmp[1]
+			r.user, r.passw = tmp[0], tmp[1]
 		case "cli":
-			s.cli = av[1]
-			s.cli_set = true
+			r.cli = av[1]
+			r.cli_set = true
 		case "cnam":
-			s.caller_name, err = url.QueryUnescape(av[1])
+			r.caller_name, err = url.QueryUnescape(av[1])
 			if err != nil {
 				return nil, errors.New("Error parsing the cnam '" + av[1] + "': " + err.Error())
 			}
@@ -212,25 +187,25 @@ func NewB2BRoute(sroute string, global_config sippy_conf.Config) (*B2BRoute, err
 			if err != nil {
 				return nil, errors.New("Error parsing the ash '" + av[1] + "': " + err.Error())
 			}
-			s.extra_headers = append(s.extra_headers, ash...)
+			r.extra_headers = append(r.extra_headers, ash...)
 		case "rtpp":
 			v, err := strconv.Atoi(av[1])
 			if err != nil {
 				return nil, errors.New("Error parsing the rtpp '" + av[1] + "': " + err.Error())
 			}
-			s.rtpp = (v != 0)
+			r.rtpp = (v != 0)
 		case "op":
 			host_port := strings.SplitN(av[1], ":", 2)
 			if len(host_port) == 1 {
-				s.outbound_proxy = sippy_net.NewHostPort(av[1], "5060")
+				r.outbound_proxy = sippy_net.NewHostPort(av[1], "5060")
 			} else {
-				s.outbound_proxy = sippy_net.NewHostPort(host_port[0], host_port[1])
+				r.outbound_proxy = sippy_net.NewHostPort(host_port[0], host_port[1])
 			}
 			//default:
 			//    s.params[a] = v
 		}
 	}
-	return s, nil
+	return r, nil
 }
 
 func (s *B2BRoute) customize(rnum int, default_cld, default_cli string, default_credit_time time.Duration, pass_headers []sippy_header.SipHeader, max_credit_time time.Duration) {

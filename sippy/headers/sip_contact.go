@@ -1,8 +1,8 @@
 package sippy_header
 
 import (
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type SipContact struct {

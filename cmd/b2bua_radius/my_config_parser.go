@@ -1,28 +1,3 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-// Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package main
 
 import (
@@ -32,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type myConfigParser struct {
@@ -61,7 +36,7 @@ func NewMyConfigParser() *myConfigParser {
 	}
 }
 
-func (s *myConfigParser) Parse() error {
+func (p *myConfigParser) Parse() error {
 	/*
 	   global_config.digest_auth = true
 	   global_config.start_acct_enable = false
@@ -100,8 +75,8 @@ func (s *myConfigParser) Parse() error {
 	flag.StringVar(&logfile, "L", "/var/log/sip.log", "logfile")
 	flag.StringVar(&logfile, "logfile", "/var/log/sip.log", "path to the B2BUA log file")
 
-	flag.StringVar(&s.Static_route, "s", "", "static route for all SIP calls")
-	flag.StringVar(&s.Static_route, "static_route", "", "static route for all SIP calls")
+	flag.StringVar(&p.Static_route, "s", "", "static route for all SIP calls")
+	flag.StringVar(&p.Static_route, "static_route", "", "static route for all SIP calls")
 
 	var accept_ips string
 	flag.StringVar(&accept_ips, "a", "", "accept_ips")
@@ -175,8 +150,8 @@ func (s *myConfigParser) Parse() error {
 	flag.StringVar(&pass_headers, "pass_headers", "", "list of SIP header field names that the B2BUA will "+
 		"pass from ingress call leg to egress call leg "+
 		"unmodified (comma-separated list)")
-	flag.StringVar(&s.B2bua_socket, "c", "/var/run/b2bua.sock", "b2bua_socket")
-	flag.StringVar(&s.B2bua_socket, "b2bua_socket", "/var/run/b2bua.sock", "path to the B2BUA command socket or address to listen "+
+	flag.StringVar(&p.B2bua_socket, "c", "/var/run/b2bua.sock", "b2bua_socket")
+	flag.StringVar(&p.B2bua_socket, "b2bua_socket", "/var/run/b2bua.sock", "path to the B2BUA command socket or address to listen "+
 		"for commands in the format \"udp:host[:port]\"")
 	/*
 	   if o == '-M':
@@ -200,7 +175,7 @@ func (s *myConfigParser) Parse() error {
 		"RTPproxy control socket. Address in the format "+
 		"\"udp:host[:port]\" (comma-separated list)")
 	flag.StringVar(&rtp_proxy_client, "rtp_proxy_client", "", "RTPproxy control socket. Address in the format \"udp:host[:port]\"")
-	flag.StringVar(&s.Sip_proxy, "sip_proxy", "", "address of the helper proxy to handle \"REGISTER\" "+
+	flag.StringVar(&p.Sip_proxy, "sip_proxy", "", "address of the helper proxy to handle \"REGISTER\" "+
 		"and \"SUBSCRIBE\" messages. Address in the format \"host[:port]\"")
 	var sip_port int
 	flag.IntVar(&sip_port, "p", 5060, "sip_port")
@@ -216,14 +191,14 @@ func (s *myConfigParser) Parse() error {
 	for _, s := range arr {
 		s = strings.TrimSpace(s)
 		if s != "" {
-			s.Rtp_proxy_clients = append(s.Rtp_proxy_clients, s)
+			p.Rtp_proxy_clients = append(p.Rtp_proxy_clients, s)
 		}
 	}
 	arr = strings.Split(accept_ips, ",")
 	for _, s := range arr {
 		s = strings.TrimSpace(s)
 		if s != "" {
-			s.accept_ips[s] = true
+			p.accept_ips[s] = true
 		}
 	}
 	pass_headers += "," + pass_header
@@ -231,37 +206,37 @@ func (s *myConfigParser) Parse() error {
 	for _, s := range arr {
 		s = strings.TrimSpace(s)
 		if s != "" {
-			s.pass_headers = append(s.pass_headers, s)
+			p.pass_headers = append(p.pass_headers, s)
 		}
 	}
 	switch ka_level {
 	case 0:
 		// do nothing
 	case 1:
-		s.keepalive_ans = 32 * time.Second
+		p.keepalive_ans = 32 * time.Second
 	case 2:
-		s.keepalive_orig = 32 * time.Second
+		p.keepalive_orig = 32 * time.Second
 	case 3:
-		s.keepalive_ans = 32 * time.Second
-		s.keepalive_orig = 32 * time.Second
+		p.keepalive_ans = 32 * time.Second
+		p.keepalive_orig = 32 * time.Second
 	default:
 		return errors.New("-k argument not in the range 0-3")
 	}
 	if keepalive_ans > 0 {
-		s.keepalive_ans = time.Duration(keepalive_ans) * time.Second
+		p.keepalive_ans = time.Duration(keepalive_ans) * time.Second
 	}
 	if keepalive_orig > 0 {
-		s.keepalive_orig = time.Duration(keepalive_orig) * time.Second
+		p.keepalive_orig = time.Duration(keepalive_orig) * time.Second
 	}
 	error_logger := sippy_log.NewErrorLogger()
 	sip_logger, err := sippy_log.NewSipLogger("b2bua", logfile)
 	if err != nil {
 		return err
 	}
-	s.Hrtb_ival = time.Duration(hrtb_ival) * time.Second
-	s.Hrtb_retr_ival = time.Duration(hrtb_retr_ival) * time.Second
-	s.Config = sippy_conf.NewConfig(error_logger, sip_logger)
-	s.SetMyPort(sippy_net.NewMyPort(strconv.Itoa(sip_port)))
+	p.Hrtb_ival = time.Duration(hrtb_ival) * time.Second
+	p.Hrtb_retr_ival = time.Duration(hrtb_retr_ival) * time.Second
+	p.Config = sippy_conf.NewConfig(error_logger, sip_logger)
+	p.SetMyPort(sippy_net.NewMyPort(strconv.Itoa(sip_port)))
 	return nil
 }
 
@@ -486,10 +461,10 @@ if __name__ == '__main__':
     assert m['_accept_ips'][1] == '5.6.7.8'
 */
 
-func (s *myConfigParser) checkIP(ip string) bool {
-	if len(s.accept_ips) == 0 {
+func (p *myConfigParser) checkIP(ip string) bool {
+	if len(p.accept_ips) == 0 {
 		return true
 	}
-	_, ok := s.accept_ips[ip]
+	_, ok := p.accept_ips[ip]
 	return ok
 }

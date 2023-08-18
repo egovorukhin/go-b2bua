@@ -30,8 +30,8 @@ package main
 import (
 	"sync"
 
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type callMap struct {
@@ -39,7 +39,7 @@ type callMap struct {
 	logger     sippy_log.ErrorLogger
 	Sip_tm     sippy_types.SipTransactionManager
 	Proxy      sippy_types.StatefulProxy
-	ccmap      map[int64]*callController
+	ccmap      map[int64]*CallController
 	ccmap_lock sync.Mutex
 	sshaken    *StirShaken
 }
@@ -50,7 +50,7 @@ func NewCallMap(config *myconfig, logger sippy_log.ErrorLogger) (*callMap, error
 	ret := &callMap{
 		logger: logger,
 		config: config,
-		ccmap:  make(map[int64]*callController),
+		ccmap:  make(map[int64]*CallController),
 	}
 	ret.sshaken, err = NewStirShaken(config)
 	if err != nil {
@@ -97,7 +97,7 @@ func (s *callMap) Remove(ccid int64) {
 }
 
 func (s *callMap) Shutdown() {
-	acalls := []*callController{}
+	acalls := []*CallController{}
 	s.ccmap_lock.Lock()
 	for _, cc := range s.ccmap {
 		acalls = append(acalls, cc)

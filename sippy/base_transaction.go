@@ -4,9 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/headers"
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type sip_transaction_state int

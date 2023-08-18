@@ -9,13 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/fmt"
-	"github.com/sippy/go-b2bua/sippy/math"
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/types"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/fmt"
+	"github.com/egovorukhin/go-b2bua/sippy/math"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 type Rtp_proxy_client_udp struct {

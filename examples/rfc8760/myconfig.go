@@ -27,24 +27,24 @@
 package main
 
 import (
-    "github.com/sippy/go-b2bua/sippy/conf"
-    "github.com/sippy/go-b2bua/sippy/log"
-    "github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type myconfig struct {
-    sippy_conf.Config
+	sippy_conf.Config
 
-    Nh_addr         *sippy_net.HostPort
-    Authname_in	    string
-    Authname_out    string
-    Passwd_in       string
-    Passwd_out      string
-    Hash_alg        string
+	Nh_addr      *sippy_net.HostPort
+	Authname_in  string
+	Authname_out string
+	Passwd_in    string
+	Passwd_out   string
+	Hash_alg     string
 }
 
 func NewMyConfig(error_logger sippy_log.ErrorLogger, sip_logger sippy_log.SipLogger) *myconfig {
-    return &myconfig{
-        Config      : sippy_conf.NewConfig(error_logger, sip_logger),
-    }
+	return &myconfig{
+		Config: sippy_conf.NewConfig(error_logger, sip_logger),
+	}
 }

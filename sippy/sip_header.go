@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sippy/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
 )
 
 var sip_header_name_map = map[string]func(body string) []sippy_header.SipHeader{

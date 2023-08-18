@@ -1,7 +1,7 @@
 package sippy_header
 
 import (
-	"github.com/sippy/go-b2bua/sippy/fmt"
+	"github.com/egovorukhin/go-b2bua/sippy/fmt"
 )
 
 type TID struct {

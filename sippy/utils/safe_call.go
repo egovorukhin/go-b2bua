@@ -25,20 +25,20 @@
 package sippy_utils
 
 import (
-    "sync"
+	"sync"
 
-    "github.com/sippy/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
 )
 
 func SafeCall(function func(), lock sync.Locker, logger sippy_log.ErrorLogger) {
-    if lock != nil {
-        lock.Lock()
-        defer lock.Unlock()
-    }
-    defer func() {
-        if err := recover(); err != nil {
-            logger.ErrorAndTraceback(err)
-        }
-    }()
-    function()
+	if lock != nil {
+		lock.Lock()
+		defer lock.Unlock()
+	}
+	defer func() {
+		if err := recover(); err != nil {
+			logger.ErrorAndTraceback(err)
+		}
+	}()
+	function()
 }

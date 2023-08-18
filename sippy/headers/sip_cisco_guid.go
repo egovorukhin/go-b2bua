@@ -4,7 +4,7 @@ import (
 	"crypto/rand"
 	"strconv"
 
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type SipCiscoGUID struct {

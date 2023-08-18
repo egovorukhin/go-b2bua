@@ -7,10 +7,10 @@ import (
 	"sync"
 	"unicode"
 
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
-func extract_to_next_token(s string, match string, invert bool) (string, string) {
+func extractToNextToken(s string, match string, invert bool) (string, string) {
 	i := 0
 	for i < len(s) {
 		if (!invert && strings.IndexByte(match, s[i]) == -1) || (invert && strings.IndexByte(match, s[i]) != -1) {
@@ -31,7 +31,7 @@ type UpdateLookupOpts struct {
 	DestinationIP string
 	LocalIP       string
 	Codecs        []string
-	Otherparams   string
+	OtherParams   string
 	RemoteIP      string
 	RemotePort    string
 	FromTag       string
@@ -45,75 +45,75 @@ func NewUpdateLookupOpts(s, args string) (*UpdateLookupOpts, error) {
 	if len(arr) != 3 {
 		return nil, errors.New("The lookup opts must have at least three arguments")
 	}
-	s := &UpdateLookupOpts{
+	ul := &UpdateLookupOpts{
 		RemoteIP:   arr[0],
 		RemotePort: arr[1],
 	}
 	arr = sippy_utils.FieldsN(arr[2], 2)
-	s.FromTag = arr[0]
+	ul.FromTag = arr[0]
 	if len(arr) > 1 {
 		arr2 := sippy_utils.FieldsN(arr[1], 3)
 		switch len(arr2) {
 		case 1:
-			s.ToTag = arr2[0]
+			ul.ToTag = arr2[0]
 		case 2:
-			s.NotifySocket, s.NotifyTag = arr2[0], arr2[1]
+			ul.NotifySocket, ul.NotifyTag = arr2[0], arr2[1]
 		default:
-			s.ToTag, s.NotifySocket, s.NotifyTag = arr2[0], arr2[1], arr2[2]
+			ul.ToTag, ul.NotifySocket, ul.NotifyTag = arr2[0], arr2[1], arr2[2]
 		}
 	}
 	for len(s) > 0 {
 		var val string
 		if s[0] == 'R' {
-			val, s = extract_to_next_token(s[1:], "1234567890.", false)
+			val, s = extractToNextToken(s[1:], "1234567890.", false)
 			val = strings.TrimSpace(val)
 			if len(val) > 0 {
-				s.DestinationIP = val
+				ul.DestinationIP = val
 			}
 		}
 		switch s[0] {
 		case 'L':
-			val, s = extract_to_next_token(s[1:], "1234567890.", false)
+			val, s = extractToNextToken(s[1:], "1234567890.", false)
 			val = strings.TrimSpace(val)
 			if len(val) > 0 {
-				s.LocalIP = val
+				ul.LocalIP = val
 			}
 		case 'c':
-			val, s = extract_to_next_token(s[1:], "1234567890,", false)
+			val, s = extractToNextToken(s[1:], "1234567890,", false)
 			val = strings.TrimSpace(val)
 			if len(val) > 0 {
-				s.Codecs = strings.Split(val, ",")
+				ul.Codecs = strings.Split(val, ",")
 			}
 		default:
-			val, s = extract_to_next_token(s, "cR", true)
+			val, s = extractToNextToken(s, "cR", true)
 			if len(val) > 0 {
-				s.Otherparams += val
+				ul.OtherParams += val
 			}
 		}
 	}
-	return s, nil
+	return ul, nil
 }
 
-func (s *UpdateLookupOpts) Getstr(call_id string, swaptags, skipnotify bool) (string, error) {
-	s := ""
-	if s.DestinationIP != "" {
-		s += "R" + s.DestinationIP
+func (ul *UpdateLookupOpts) Getstr(call_id string, swaptags, skipnotify bool) (string, error) {
+	var s string
+	if ul.DestinationIP != "" {
+		s += "R" + ul.DestinationIP
 	}
-	if s.LocalIP != "" {
-		s += "L" + s.LocalIP
+	if ul.LocalIP != "" {
+		s += "L" + ul.LocalIP
 	}
-	if s.Codecs != nil {
-		s += "c" + strings.Join(s.Codecs, ",")
+	if ul.Codecs != nil {
+		s += "c" + strings.Join(ul.Codecs, ",")
 	}
-	s += s.Otherparams
+	s += ul.OtherParams
 	s += " " + call_id
-	if s.RemoteIP != "" {
-		s += " " + s.RemoteIP
+	if ul.RemoteIP != "" {
+		s += " " + ul.RemoteIP
 	}
-	if s.RemotePort != "" {
-		s += " " + s.RemotePort
+	if ul.RemotePort != "" {
+		s += " " + ul.RemotePort
 	}
-	FromTag, ToTag := s.FromTag, s.ToTag
+	FromTag, ToTag := ul.FromTag, ul.ToTag
 	if swaptags {
 		if ToTag == "" {
 			return "", errors.New("UpdateLookupOpts::Getstr(swaptags = True): ToTag is not set")
@@ -127,17 +127,17 @@ func (s *UpdateLookupOpts) Getstr(call_id string, swaptags, skipnotify bool) (st
 		s += " " + ToTag
 	}
 	if !skipnotify {
-		if s.NotifySocket != "" {
-			s += " " + s.NotifySocket
+		if ul.NotifySocket != "" {
+			s += " " + ul.NotifySocket
 		}
-		if s.NotifyTag != "" {
-			s += " " + s.NotifyTag
+		if ul.NotifyTag != "" {
+			s += " " + ul.NotifyTag
 		}
 	}
 	return s, nil
 }
 
-type Rtp_proxy_cmd struct {
+type RtpProxyCmd struct {
 	Type        byte
 	ULOpts      *UpdateLookupOpts
 	CommandOpts string
@@ -146,11 +146,11 @@ type Rtp_proxy_cmd struct {
 	Nretr       int
 }
 
-func NewRtp_proxy_cmd(cmd string) (*Rtp_proxy_cmd, error) {
-	s := &Rtp_proxy_cmd{
+func NewRtpProxyCmd(cmd string) (*RtpProxyCmd, error) {
+	rpc := &RtpProxyCmd{
 		Type: strings.ToUpper(cmd[:1])[0],
 	}
-	switch s.Type {
+	switch rpc.Type {
 	case 'U':
 		fallthrough
 	case 'L':
@@ -166,135 +166,135 @@ func NewRtp_proxy_cmd(cmd string) (*Rtp_proxy_cmd, error) {
 	case 'C':
 		fallthrough
 	case 'Q':
-		var command_opts, args string
+		var commandOpts, args string
 		arr := sippy_utils.FieldsN(cmd, 3)
 		if len(arr) != 3 {
 			return nil, errors.New("The command must have at least three parts")
 		}
-		command_opts, s.CallId, args = arr[0], arr[1], arr[2]
-		switch s.Type {
+		commandOpts, rpc.CallId, args = arr[0], arr[1], arr[2]
+		switch rpc.Type {
 		case 'U':
 			fallthrough
 		case 'L':
 			var err error
-			s.ULOpts, err = NewUpdateLookupOpts(command_opts[1:], args)
+			rpc.ULOpts, err = NewUpdateLookupOpts(commandOpts[1:], args)
 			if err != nil {
 				return nil, err
 			}
 		default:
-			s.Args = args
-			s.CommandOpts = command_opts[1:]
+			rpc.Args = args
+			rpc.CommandOpts = commandOpts[1:]
 		}
 	case 'G':
 		if !unicode.IsSpace([]rune(cmd)[1]) {
 			cparts := sippy_utils.FieldsN(cmd[1:], 2)
 			if len(cparts) > 1 {
-				s.CommandOpts, s.Args = cparts[0], cparts[1]
+				rpc.CommandOpts, rpc.Args = cparts[0], cparts[1]
 			} else {
-				s.CommandOpts = cparts[0]
+				rpc.CommandOpts = cparts[0]
 			}
 		} else {
-			s.Args = strings.TrimSpace(cmd[1:])
+			rpc.Args = strings.TrimSpace(cmd[1:])
 		}
 	default:
-		s.CommandOpts = cmd[1:]
+		rpc.CommandOpts = cmd[1:]
 	}
-	return s, nil
+	return rpc, nil
 }
 
-func (s *Rtp_proxy_cmd) String() string {
-	s := string([]byte{s.Type})
-	if s.ULOpts != nil {
-		_s, err := s.ULOpts.Getstr(s.CallId, false, false)
+func (rpc *RtpProxyCmd) String() string {
+	s := string([]byte{rpc.Type})
+	if rpc.ULOpts != nil {
+		_s, err := rpc.ULOpts.Getstr(rpc.CallId, false, false)
 		if err != nil {
 			panic(err)
 		}
 		s += _s
 	} else {
-		if s.CommandOpts != "" {
-			s += s.CommandOpts
+		if rpc.CommandOpts != "" {
+			s += rpc.CommandOpts
 		}
-		if s.CallId != "" {
-			s += " " + s.CallId
+		if rpc.CallId != "" {
+			s += " " + rpc.CallId
 		}
 	}
-	if s.Args != "" {
-		s += " " + s.Args
+	if rpc.Args != "" {
+		s += " " + rpc.Args
 	}
 	return s
 }
 
-type Rtpp_stats struct {
-	spookyprefix   string
-	all_names      []string
-	Verbose        bool
-	dict           map[string]int64
-	dict_lock      sync.Mutex
-	total_duration float64
+type RtppStats struct {
+	spookyPrefix  string
+	allNames      []string
+	Verbose       bool
+	dict          map[string]int64
+	dictLock      sync.Mutex
+	totalDuration float64
 }
 
-func NewRtpp_stats(snames []string) *Rtpp_stats {
-	s := &Rtpp_stats{
+func NewRtppStats(snames []string) *RtppStats {
+	s := &RtppStats{
 		Verbose:      false,
-		spookyprefix: "",
+		spookyPrefix: "",
 		dict:         make(map[string]int64),
-		all_names:    snames,
+		allNames:     snames,
 	}
 	for _, sname := range snames {
 		if sname != "total_duration" {
-			s.dict[s.spookyprefix+sname] = 0
+			s.dict[s.spookyPrefix+sname] = 0
 		}
 	}
 	return s
 }
 
-func (s *Rtpp_stats) AllNames() []string {
-	return s.all_names
+func (s *RtppStats) AllNames() []string {
+	return s.allNames
 }
 
 /*
 def __iadd__(s, other):
 
 	for sname in s.all_names:
-	    aname = s.spookyprefix + sname
+	    aname = s.spookyPrefix + sname
 	    s.__dict__[aname] += other.__dict__[aname]
 	return s
 */
-func (s *Rtpp_stats) ParseAndAdd(rstr string) error {
-	rparts := sippy_utils.FieldsN(rstr, len(s.all_names))
-	for i, name := range s.all_names {
+func (s *RtppStats) ParseAndAdd(rstr string) error {
+	rparts := sippy_utils.FieldsN(rstr, len(s.allNames))
+	for i, name := range s.allNames {
 		if name == "total_duration" {
 			rval, err := strconv.ParseFloat(rparts[i], 64)
 			if err != nil {
 				return err
 			}
-			s.total_duration += rval
+			s.totalDuration += rval
 		} else {
 			rval, err := strconv.ParseInt(rparts[i], 10, 64)
 			if err != nil {
 				return err
 			}
-			aname := s.spookyprefix + s.all_names[i]
-			s.dict_lock.Lock()
+			aname := s.spookyPrefix + s.allNames[i]
+			s.dictLock.Lock()
 			s.dict[aname] += rval
-			s.dict_lock.Unlock()
+			s.dictLock.Unlock()
 		}
 	}
 	return nil
 }
 
-func (s *Rtpp_stats) String() string {
-	rvals := make([]string, 0, len(s.all_names))
-	for _, sname := range s.all_names {
+func (s *RtppStats) String() string {
+	rvals := make([]string, 0, len(s.allNames))
+	for _, sname := range s.allNames {
 		var rval string
 
 		if sname == "total_duration" {
-			rval = strconv.FormatFloat(s.total_duration, 'f', -1, 64)
+			rval = strconv.FormatFloat(s.totalDuration, 'f', -1, 64)
 		} else {
-			aname := s.spookyprefix + sname
-			s.dict_lock.Lock()
+			aname := s.spookyPrefix + sname
+			s.dictLock.Lock()
 			rval = strconv.FormatInt(s.dict[aname], 10)
-			s.dict_lock.Unlock()
+			s.dictLock.Unlock()
 		}
 		if s.Verbose {
 			rval = sname + "=" + rval

@@ -3,9 +3,9 @@ package sippy
 import (
 	"sort"
 
-	"github.com/sippy/go-b2bua/sippy/headers"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type CCEventRedirect struct {

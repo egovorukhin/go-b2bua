@@ -27,73 +27,73 @@
 package sippy_utils
 
 import (
-    "os"
-    "os/exec"
-    "os/signal"
-    "syscall"
+	"os"
+	"os/exec"
+	"os/signal"
+	"syscall"
 
-    "github.com/sippy/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
 )
 
 const (
-    ENV_VAR         = "_GO_DAEMON"
-    ENV_VAR_VALUE   = "1"
+	ENV_VAR       = "_GO_DAEMON"
+	ENV_VAR_VALUE = "1"
 )
 
 var reopen_funcs []func() = []func(){}
 
 func reopen_logfile(fname string, uid, gid int, logger sippy_log.ErrorLogger) error {
-    logfd, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0664)
-    if err != nil {
-        return err
-    }
-    syscall.Dup2(int(logfd.Fd()), int(os.Stderr.Fd()))
-    syscall.Dup2(int(logfd.Fd()), int(os.Stdout.Fd()))
-    logfd.Close()
-    os.Chown(fname, uid, gid)
-    return nil
+	logfd, err := os.OpenFile(fname, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0664)
+	if err != nil {
+		return err
+	}
+	syscall.Dup2(int(logfd.Fd()), int(os.Stderr.Fd()))
+	syscall.Dup2(int(logfd.Fd()), int(os.Stdout.Fd()))
+	logfd.Close()
+	os.Chown(fname, uid, gid)
+	return nil
 }
 
 func AddLogReopenFunc(fn func()) {
-    reopen_funcs = append(reopen_funcs, fn)
+	reopen_funcs = append(reopen_funcs, fn)
 }
 
 func Daemonize(logfile string, loguid, loggid int, logger sippy_log.ErrorLogger) error {
-    if os.Getenv(ENV_VAR) == ENV_VAR_VALUE {
-        // Setup log rotation
-        AddLogReopenFunc(func() {
-            logger.Debug("Signal received, reopening the log file")
-            err := reopen_logfile(logfile, loguid, loggid, logger)
-            if err != nil {
-                logger.Error("Cannot reopen " + logfile + ": " + err.Error())
-            }
-        })
-        sig_ch := make(chan os.Signal, 1)
-        signal.Notify(sig_ch, syscall.SIGUSR1)
-        go func() {
-            for {
-                <-sig_ch
-                for _, fn := range reopen_funcs {
-                    fn()
-                }
-            }
-        }()
-        return nil // I am a child
-    }
-    err := reopen_logfile(logfile, loguid, loggid, logger)
-    if err != nil {
-        return err
-    }
-    cmd := exec.Command(os.Args[0], os.Args[1:]...)
-    cmd.Env = append(os.Environ(), ENV_VAR + "=" + ENV_VAR_VALUE)
-    cmd.Stderr = os.Stderr
-    cmd.Stdout = os.Stdout
-    cmd.SysProcAttr = &syscall.SysProcAttr{ Setsid : true }
-    err = cmd.Start()
-    if err != nil {
-        logger.Error("Cannot start: " + err.Error())
-        os.Exit(1)
-    }
-    os.Exit(0)
-    return nil // not reached
+	if os.Getenv(ENV_VAR) == ENV_VAR_VALUE {
+		// Setup log rotation
+		AddLogReopenFunc(func() {
+			logger.Debug("Signal received, reopening the log file")
+			err := reopen_logfile(logfile, loguid, loggid, logger)
+			if err != nil {
+				logger.Error("Cannot reopen " + logfile + ": " + err.Error())
+			}
+		})
+		sig_ch := make(chan os.Signal, 1)
+		signal.Notify(sig_ch, syscall.SIGUSR1)
+		go func() {
+			for {
+				<-sig_ch
+				for _, fn := range reopen_funcs {
+					fn()
+				}
+			}
+		}()
+		return nil // I am a child
+	}
+	err := reopen_logfile(logfile, loguid, loggid, logger)
+	if err != nil {
+		return err
+	}
+	cmd := exec.Command(os.Args[0], os.Args[1:]...)
+	cmd.Env = append(os.Environ(), ENV_VAR+"="+ENV_VAR_VALUE)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	err = cmd.Start()
+	if err != nil {
+		logger.Error("Cannot start: " + err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+	return nil // not reached
 }

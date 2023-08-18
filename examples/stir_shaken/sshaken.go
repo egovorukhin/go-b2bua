@@ -33,7 +33,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/stir_shaken"
+	"github.com/egovorukhin/go-b2bua/sippy/stir_shaken"
 )
 
 type StirShaken struct {

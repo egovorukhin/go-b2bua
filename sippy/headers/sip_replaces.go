@@ -3,7 +3,7 @@ package sippy_header
 import (
 	"strings"
 
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type sipReplacesBody struct {

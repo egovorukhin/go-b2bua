@@ -6,12 +6,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/headers"
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/types"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 type Ua struct {
@@ -243,7 +243,7 @@ func (s *Ua) PrepTr(req sippy_types.SipRequest, eh []sippy_header.SipHeader) (si
 	if sip_tm == nil {
 		return nil, errors.New("UA already dead")
 	}
-	tr, err := sip_tm.CreateClientTransaction(req, s.me(), s.session_lock /*laddress*/, s.source_address /*udp_server*/, nil, eh, s.me().BeforeRequestSent)
+	tr, err := sip_tm.CreateClientTransaction(req, s.me(), s.session_lock /*lAddress*/, s.source_address /*udp_server*/, nil, eh, s.me().BeforeRequestSent)
 	if err != nil {
 		return nil, err
 	}

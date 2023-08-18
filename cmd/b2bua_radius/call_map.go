@@ -1,28 +1,3 @@
-// Copyright (c) 2003-2005 Maxim Sobolev. All rights reserved.
-// Copyright (c) 2006-2014 Sippy Software, Inc. All rights reserved.
-//
-// All rights reserved.
-//
-// Redistribution and use in source and binary forms, with or without modification,
-// are permitted provided that the following conditions are met:
-//
-// 1. Redistributions of source code must retain the above copyright notice, this
-// list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright notice,
-// this list of conditions and the following disclaimer in the documentation and/or
-// other materials provided with the distribution.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR
-// ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-// (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-// LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-// ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 package main
 
 import (
@@ -36,10 +11,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy/cli"
-	"github.com/sippy/go-b2bua/sippy/headers"
-	"github.com/sippy/go-b2bua/sippy/time"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/cli"
+	"github.com/egovorukhin/go-b2bua/sippy/headers"
+	"github.com/egovorukhin/go-b2bua/sippy/time"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type CallMap struct {
@@ -80,20 +55,20 @@ func NewCallMap(global_config *myConfigParser, rtp_proxy_clients []sippy_types.R
 	go func() {
 		sighup_ch := make(chan os.Signal, 1)
 		signal.Notify(sighup_ch, syscall.SIGHUP)
-		sigusr2_ch := make(chan os.Signal, 1)
+		/*sigusr2_ch := make(chan os.Signal, 1)
 		signal.Notify(sigusr2_ch, syscall.SIGUSR2)
 		sigprof_ch := make(chan os.Signal, 1)
-		signal.Notify(sigprof_ch, syscall.SIGPROF)
+		signal.Notify(sigprof_ch, syscall.SIGPROF)*/
 		sigterm_ch := make(chan os.Signal, 1)
 		signal.Notify(sigterm_ch, syscall.SIGTERM)
 		for {
 			select {
 			case <-sighup_ch:
 				s.discAll(syscall.SIGHUP)
-			case <-sigusr2_ch:
+			/*case <-sigusr2_ch:
 				s.toggleDebug()
 			case <-sigprof_ch:
-				s.safeRestart()
+				s.safeRestart()*/
 			case <-sigterm_ch:
 				s.safeStop()
 			}

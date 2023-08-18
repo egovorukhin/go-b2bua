@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type sipReasonBody struct {

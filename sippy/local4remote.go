@@ -4,8 +4,8 @@ import (
 	"net"
 	"sync"
 
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type local4remote struct {
@@ -45,7 +45,7 @@ func NewLocal4Remote(config sippy_conf.Config, handleIncoming sippy_net.DataPack
 	var last_error error
 	for _, laddress := range laddresses {
 		/*
-		   sopts := NewUdpServerOpts(laddress, handleIncoming)
+		   sopts := NewUdpServerOpts(lAddress, handleIncoming)
 		   server, err := NewUdpServer(config, sopts)
 		*/
 		server, err := s.tfactory.NewSipTransport(laddress, handleIncoming)
@@ -91,7 +91,7 @@ func (s *local4remote) getServer(address *sippy_net.HostPort, is_local bool /*= 
 			if !ok {
 				return nil
 			} else {
-				//print 'local4remote-1: local address for %s is %s' % (address[0], laddress[0])
+				//print 'local4remote-1: local address for %s is %s' % (address[0], lAddress[0])
 				return server
 			}
 		}
@@ -127,7 +127,7 @@ func (s *local4remote) getServer(address *sippy_net.HostPort, is_local bool /*= 
 	if !ok {
 		var err error
 		/*
-		   sopts := NewUdpServerOpts(laddress, s.handleIncoming)
+		   sopts := NewUdpServerOpts(lAddress, s.handleIncoming)
 		   server, err = NewUdpServer(s.config, sopts)
 		*/
 		server, err = s.tfactory.NewSipTransport(laddress, s.handleIncoming)
@@ -137,7 +137,7 @@ func (s *local4remote) getServer(address *sippy_net.HostPort, is_local bool /*= 
 		}
 		s.cache_l2s[laddress.String()] = server
 	}
-	//print 'local4remote-2: local address for %s is %s' % (address[0], laddress[0])
+	//print 'local4remote-2: local address for %s is %s' % (address[0], lAddress[0])
 	return server
 }
 

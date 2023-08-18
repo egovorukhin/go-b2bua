@@ -13,11 +13,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/sippy/go-b2bua/sippy"
-	"github.com/sippy/go-b2bua/sippy/conf"
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 var next_cc_id chan int64
@@ -239,7 +239,7 @@ func main() {
 
 	signal_chan := make(chan os.Signal, 1)
 	signal.Notify(signal_chan, syscall.SIGTERM, syscall.SIGINT)
-	signal.Ignore(syscall.SIGHUP, syscall.SIGPIPE, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Ignore(syscall.SIGHUP, syscall.SIGPIPE)
 	select {
 	case <-signal_chan:
 		cmap.Shutdown()

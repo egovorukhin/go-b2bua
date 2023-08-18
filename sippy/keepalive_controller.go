@@ -1,8 +1,8 @@
 package sippy
 
 import (
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/types"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/types"
 )
 
 type keepaliveController struct {

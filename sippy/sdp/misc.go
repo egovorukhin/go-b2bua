@@ -1,11 +1,13 @@
 package sippy_sdp
 
+import net "github.com/egovorukhin/go-b2bua/sippy/net"
+
 type SdpHeader interface {
 	String() string
-	LocalStr(hostPort *sippy_net.HostPort) string
+	LocalStr(hostPort *net.HostPort) string
 }
 
-type Sdp_header_and_name struct {
+type SdpHeaderAndName struct {
 	Name   string
 	Header SdpHeader
 }

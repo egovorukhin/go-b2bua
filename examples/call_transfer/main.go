@@ -3,10 +3,10 @@ package main
 import (
 	crand "crypto/rand"
 	"flag"
+	"github.com/egovorukhin/go-b2bua/sippy"
 	sippy_conf "github.com/egovorukhin/go-b2bua/sippy/conf"
 	sippy_log "github.com/egovorukhin/go-b2bua/sippy/log"
 	sippy_net "github.com/egovorukhin/go-b2bua/sippy/net"
-	"github.com/sippy/go-b2bua/sippy"
 	mrand "math/rand"
 	"os"
 	"os/signal"
@@ -102,7 +102,7 @@ func main() {
 
 	signal_chan := make(chan os.Signal, 1)
 	signal.Notify(signal_chan, syscall.SIGTERM, syscall.SIGINT)
-	signal.Ignore(syscall.SIGHUP, syscall.SIGPIPE, syscall.SIGUSR1, syscall.SIGUSR2)
+	signal.Ignore(syscall.SIGHUP, syscall.SIGPIPE)
 	select {
 	case <-signal_chan:
 		cmap.Shutdown()

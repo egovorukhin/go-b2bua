@@ -27,26 +27,26 @@
 package main
 
 import (
-    "github.com/sippy/go-b2bua/sippy/conf"
-    "github.com/sippy/go-b2bua/sippy/log"
-    "github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/conf"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type myconfig struct {
-    sippy_conf.Config
+	sippy_conf.Config
 
-    Nh_addr         *sippy_net.HostPort
-    Crt_roots_file  string
-    Attest          string
-    Origid          string
-    X5u             string
-    Crt_file        string
-    Pkey_file       string
-    Verify          bool
+	Nh_addr        *sippy_net.HostPort
+	Crt_roots_file string
+	Attest         string
+	Origid         string
+	X5u            string
+	Crt_file       string
+	Pkey_file      string
+	Verify         bool
 }
 
 func NewMyConfig(error_logger sippy_log.ErrorLogger, sip_logger sippy_log.SipLogger) *myconfig {
-    return &myconfig{
-        Config      : sippy_conf.NewConfig(error_logger, sip_logger),
-    }
+	return &myconfig{
+		Config: sippy_conf.NewConfig(error_logger, sip_logger),
+	}
 }

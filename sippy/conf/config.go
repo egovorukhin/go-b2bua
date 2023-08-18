@@ -6,8 +6,8 @@ import (
 	"net"
 	"os"
 
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/net"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/net"
 )
 
 type Config interface {

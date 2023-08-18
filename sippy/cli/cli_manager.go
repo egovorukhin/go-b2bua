@@ -33,8 +33,8 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/sippy/go-b2bua/sippy/log"
-	"github.com/sippy/go-b2bua/sippy/utils"
+	"github.com/egovorukhin/go-b2bua/sippy/log"
+	"github.com/egovorukhin/go-b2bua/sippy/utils"
 )
 
 type CLIManagerIface interface {
